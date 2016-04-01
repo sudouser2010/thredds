@@ -4,7 +4,7 @@ description = "Classes for CDM unit and integration testing. Relies on having ac
 ext.title = "Test CDM (upc/share - Unidata only)"
 
 dependencies {
-    compile project(":cdm")
+    compile project(":cdm-test")
     testCompile project(":cdm")
     testCompile project(":bufr")
     testCompile project(":grib")
