@@ -43,7 +43,7 @@ import org.junit.experimental.categories.Category;
 import ucar.httpservices.HTTPFactory;
 import ucar.httpservices.HTTPMethod;
 import ucar.httpservices.HTTPSession;
-import ucar.nc2.util.UnitTestCommon;
+import ucar.nc2.util.CommonTestUtils;
 import ucar.unidata.test.util.NeedsExternalResource;
 import ucar.unidata.test.util.TestDir;
 
@@ -61,7 +61,7 @@ import java.io.Serializable;
  */
 
 @Category(NeedsExternalResource.class)
-public class TestAuth extends UnitTestCommon
+public class TestAuth extends CommonTestUtils
 {
     static final String BADPASSWORD = "bad";
 

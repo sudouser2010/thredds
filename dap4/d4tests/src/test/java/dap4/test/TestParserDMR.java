@@ -10,6 +10,7 @@ import dap4.core.dmr.parser.ParseUtil;
 import dap4.servlet.DMRPrint;
 import org.junit.Before;
 import org.junit.Test;
+import ucar.nc2.util.CommonTestUtils;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -218,7 +219,7 @@ public class TestParserDMR extends DapTestCommon
         } else if (prop_diff) { //compare with baseline
             // Read the baseline file
             String baselinecontent = readfile(baseline);
-            pass = compare(baselinecontent, testresult);
+            pass = pass && same(getTitle(),baselinecontent, testresult);
         }
 
         return pass;
