@@ -1,8 +1,10 @@
+
 description = "Classes for CDM unit and integration testing. Relies on having access to cdmUnitTest directory, so can" +
         " only be run at Unidata."
 ext.title = "Test CDM (upc/share - Unidata only)"
 
 dependencies {
+    compile project(":cdm")
     testCompile project(":cdm")
     testCompile project(":bufr")
     testCompile project(":grib")
