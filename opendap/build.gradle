@@ -8,7 +8,6 @@ ext.url = "http://opendap.org/"
 dependencies {
     compile project(':cdm')
     compile project(':httpservices')
-    testCompile(':cdm')
 
     provided libraries["javax.servlet-api"]
     compile libraries["jdom2"]
