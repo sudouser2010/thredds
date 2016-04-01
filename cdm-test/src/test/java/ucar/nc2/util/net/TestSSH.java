@@ -84,23 +84,6 @@ public class TestSSH extends CommonTestUtils
         HTTPSession.TESTING = true;
     }
 
-    static protected class Result
-    {
-        int status = 0;
-        byte[] contents = null;
-
-        public String toString()
-        {
-            StringBuilder b = new StringBuilder();
-            b.append("{");
-            b.append("status=");
-            b.append(status);
-            b.append("}");
-            return b.toString();
-        }
-    }
-
-
     //////////////////////////////////////////////////
     // Provide a non-interactive CredentialsProvider to hold
     // the user+pwd; used in several places
