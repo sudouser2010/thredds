@@ -53,6 +53,8 @@ import ucar.unidata.test.util.TestDir;
 import java.io.IOException;
 import java.io.Serializable;
 
+import static ucar.nc2.util.CommonTestUtils.Result;
+
 /**
  * This test is to check ssh authorization.
  * As a rule, this needs to run against localhost:8443
