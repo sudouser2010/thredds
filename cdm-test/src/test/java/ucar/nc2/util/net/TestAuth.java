@@ -50,8 +50,6 @@ import ucar.unidata.test.util.TestDir;
 import java.io.IOException;
 import java.io.Serializable;
 
-import static ucar.nc2.util.CommonTestUtils.Result;
-
 /**
  * This test is to check non-ssh related authorization: Basic primarily.
  * Notes:
@@ -185,6 +183,32 @@ public class TestAuth extends CommonTestUtils
     }
 
     //////////////////////////////////////////////////
+
+    static public class Result
+    {
+        public int status = 0;
+        public byte[] contents = null;
+
+        public String toString()
+        {
+            return String.format("{status=%d |contents|=%d}",
+                    status, (contents == null ? 0 : contents.length));
+        }
+    }
+
+    static public void
+    report(Result result)
+    {
+        report(result, null);
+    }
+
+    static public void
+    report(Result result, Integer counter)
+    {
+        System.err.printf("Result: code=%d content?=%b provider-calls=%d%n",
+                result.status, result.contents.length, counter);
+        System.err.flush();
+    }
 
     static class AuthDataBasic
     {
