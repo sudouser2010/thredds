@@ -8,6 +8,7 @@ import dap4.core.dmr.*;
 import dap4.core.dmr.parser.Dap4Parser;
 import dap4.core.dmr.parser.ParseUtil;
 import dap4.servlet.DMRPrint;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import ucar.nc2.util.CommonTestUtils;
@@ -58,8 +59,9 @@ public class TestParserDMR extends DapTestCommon
 
     //////////////////////////////////////////////////
 
-    @Before
-    public void setup() {
+    public TestParserDMR()
+    {
+        super();
         setControls();
         defineTestCases();
         chooseTestcases();
@@ -163,12 +165,14 @@ public class TestParserDMR extends DapTestCommon
     public void testParser()
             throws Exception
     {
+        int failcount = 0;
+        int ntests = 0;
         for (TestCase testcase : chosentests) {
-            if (!doOneTest(testcase)) {
-                assertTrue(false);
-                System.exit(1);
-            }
+            ntests++;
+            if(!doOneTest(testcase))
+                failcount++;
         }
+        Assert.assertTrue("***Fail: "+failcount,failcount==0);
     }
 
     boolean

@@ -142,19 +142,12 @@ abstract public class CommonTestUtils
     {
         this.title = name;
         setSystemProperties();
-        initPaths();
-    }
-
-    protected void
-    initPaths()
-    {
         // Compute the root path
         this.threddsroot = locateThreddsRoot();
         Assert.assertTrue("Cannot locate /thredds parent dir", this.threddsroot != null);
         this.threddsServer = TestDir.remoteTestServer;
-        if(DEBUG) {
+        if(DEBUG)
             System.err.println("CommonTestUtils: threddsServer=" + threddsServer);
-        }
     }
 
     /**
@@ -206,11 +199,11 @@ abstract public class CommonTestUtils
         return this.name;
     }
 
-       public String
-       getResourceDir()
-       {
-          throw new UnsupportedOperationException();
-       }
+    public String
+    getResourceDir()
+    {
+        throw new UnsupportedOperationException();
+    }
 
     //////////////////////////////////////////////////
     // Instance Utilities
@@ -261,10 +254,10 @@ abstract public class CommonTestUtils
         String result = compare(tag, baseline, testresult);
         if(result == null) {
             System.err.println("Files are Identical");
-            return false;
+            return true;
         } else {
             System.err.println(result);
-            return true;
+            return false;
         }
     }
 

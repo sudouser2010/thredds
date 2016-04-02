@@ -158,19 +158,12 @@ public class DapTestCommon extends CommonTestUtils
 
     public DapTestCommon()
     {
-        super("DapTest");
+        this("DapTest");
     }
 
     public DapTestCommon(String name)
     {
         super(name);
-    }
-
-    @Override
-    protected void
-    initPaths()
-    {
-        super.initPaths();
         this.dap4root = locateDAP4Root(this.threddsroot);
         if(this.dap4root == null)
             System.err.println("Cannot locate /dap4 parent dir");
