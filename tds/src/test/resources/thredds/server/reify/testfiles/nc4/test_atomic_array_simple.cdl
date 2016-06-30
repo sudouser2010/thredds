@@ -1,0 +1,26 @@
+netcdf test_atomic_array {
+dimensions:
+  d1 = 1;
+  d2 = 2;
+  d3 = 3;
+  d4 = 4;
+  d5 = 5;
+variables:
+  ubyte vu8(d2,d3);
+  short v16(d4);
+  uint vu32(d2,d3);
+  double vd(d2);
+  char vc(d2);
+  string vs(d2,d2);
+data:
+ vu8 =
+  255, 1, 2,
+  3, 4, 5 ;
+ v16 = 1, 2, 3, 4 ;
+ vu32 =
+  5, 4, 3,
+  2, 1, 0 ;
+ vd = 17.9, 1024.8 ;
+ vc = '@', '&' ;
+ vs = "hello\tworld", "\r\n", "Καλημέα", "abc" ;
+}

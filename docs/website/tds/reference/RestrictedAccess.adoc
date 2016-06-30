@@ -316,6 +316,13 @@ descriptive and include the hostname, for example:
 
 '''''
 
+== Certificate-Based Authorization and Authentication
+
+If clients need to be authenticated to the server, then client-side
+certificates are required. Currently, this can only be enabled at the
+Tomcat or Apache level. See the appropriate Apache documentation on
+how this is enabled.
+
 image:../thread.png[THREDDS] This document is maintained by Unidata and
 was last updated October 2012. Send comments to
 mailto:support-thredds@unidata.ucar.edu[THREDDS support].

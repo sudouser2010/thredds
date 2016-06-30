@@ -1,0 +1,8 @@
+netcdf test_utf8 {
+dimensions:
+  d = 17;
+variables:
+  char vc(d);
+data:
+  vc = "Καλημέαabc";
+}
