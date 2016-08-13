@@ -44,6 +44,7 @@ public class TestReify extends UnitTestCommon
 
     //////////////////////////////////////////////////
     // Constants
+
     static protected final String URLPREFIX = "/reify";
     static protected final String TESTINPUTSUFFIX = "/src/test/resources/thredds/server/reify";
     static protected final String RESOURCEDIR
@@ -68,20 +69,21 @@ public class TestReify extends UnitTestCommon
 
         protected String dataset;
         protected String testinputpath;
-        protected String baseline;
+        protected String baselinepath;
         protected Map<String, String> params = new HashMap<>();
 
-        protected TestCase(String dataset, String[] params, String baseline)
+        protected TestCase(String dataset, String params, String baseline)
         {
             this.dataset = dataset;
             this.testinputpath = canonjoin(this.inputroot, dataset);
-            this.baseline = baseline;
-            for(int i = 0; i < params.length; i++) {
-                String[] pieces = params[i].split("[=]");
+            this.baselinepath = canonjoin(this.baselineroot, baseline);
+	    String[] paramlist = params.split("[;]")
+            for(int i = 0; i < paramlist.length; i++) {
+                String[] pieces = paramlist[i].trim().split("[=]");
                 if(pieces.length == 1)
-                    this.params.put(pieces[0], "");
+                    this.params.put(pieces[0].trim().toLowerCase(), "");
                 else
-                    this.params.put(pieces[0], pieces[1]);
+                    this.params.put(pieces[0].trim().toLowerCase(), pieces[1].trim());
             }
             this.params.put("testing","true");
         }
@@ -94,12 +96,12 @@ public class TestReify extends UnitTestCommon
 
         String getBaseline()
         {
-            return this.baseline;
+            return this.baselinepath;
         }
 
         String getTestpath()
         {
-            String u = canonjoin(TESTINPUTDIR, this.dataset);
+            String u = this.testinputpath;
             return u;
         }
 
@@ -117,6 +119,19 @@ public class TestReify extends UnitTestCommon
     static protected void setTESTDIRS(String... dirs)
     {
         ReifyController.TESTDIRS = dirs;
+    }
+
+    static /*package*/ class NullValidator implements Validator
+    {
+        public boolean supports(Class<?> clazz)
+        {
+            return true;
+        }
+
+        public void validate(Object target, Errors errors)
+        {
+            return;
+        }
     }
 
     //////////////////////////////////////////////////
@@ -144,19 +159,7 @@ public class TestReify extends UnitTestCommon
     {
         StandaloneMockMvcBuilder mvcbuilder =
                 MockMvcBuilders.standaloneSetup(new ReifyController());
-        Validator v = new Validator()
-        {
-            public boolean supports(Class<?> clazz)
-            {
-                return true;
-            }
-
-            public void validate(Object target, Errors errors)
-            {
-                return;
-            }
-        };
-        mvcbuilder.setValidator(v);
+        mvcbuilder.setValidator(new NullValidator());
         this.mockMvc = mvcbuilder.build();
         setTESTDIRS(TESTINPUTDIR);
         TestCase.setRoots(TESTINPUTDIR, BASELINEDIR);
