@@ -1,125 +1,270 @@
+/* Copyright 2016, University Corporation for Atmospheric Research
+   See the LICENSE.txt file for more information.
+*/
+
 package thredds.server.reify;
 
 import dap4.core.util.DapUtil;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder;
+import org.junit.runner.RunWith;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
-import org.springframework.web.context.WebApplicationContext;
-import ucar.nc2.NetcdfFile;
-import ucar.nc2.jni.netcdf.Nc4Iosp;
+import ucar.httpservices.HTTPFactory;
+import ucar.httpservices.HTTPMethod;
+import ucar.httpservices.HTTPUtil;
 import ucar.unidata.util.test.UnitTestCommon;
-import ucar.unidata.util.test.category.NotJenkins;
-import ucar.unidata.util.test.category.NotTravis;
 
-import javax.servlet.ServletException;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-@Category({NotJenkins.class, NotTravis.class})
-public class TestReify extends UnitTestCommon
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration({
+        "file:d:/git/reify/tds/src/main/webapp/WEB-INF/applicationContext.xml",
+        "file:d:/git/reify/tds/src/main/webapp/WEB-INF/spring-servlet.xml",
+})
+@WebAppConfiguration
+abstract public class TestReify extends UnitTestCommon
 {
     static protected final boolean DEBUG = false;
 
     //////////////////////////////////////////////////
-    // Test cases
-    static TestCase[] TESTCASES = {
-            new TestCase("nc3/test_atomic_types.nc",
-                    new String[]{"format=netcdf3", "path=testreify"},
-                    "c:/Temp/testreify/nc3/test_atomic_types.nc3"),
-            new TestCase("nc4/test_atomic_types_simple.nc",
-                                new String[]{"format=netcdf4", "path=testreify"},
-                                "c:/Temp/testreify/nc4/test_atomic_types_simple.nc4"),
-    };
-
-    //////////////////////////////////////////////////
     // Constants
 
-    static protected final String URLPREFIX = "/reify";
+    static protected final String THREDDSPREFIX = "/thredds";
+    static protected final String SERVLETPREFIX = "/reify";
     static protected final String TESTINPUTSUFFIX = "/src/test/resources/thredds/server/reify";
     static protected final String RESOURCEDIR
             = DapUtil.canonicalpath(System.getProperty("user.dir")) + TESTINPUTSUFFIX;
     static protected final String TESTINPUTDIR = RESOURCEDIR + "/testfiles";
-    static protected final String BASELINEDIR = RESOURCEDIR + "/baseline";
+    static protected final String DOWNLOADDIR = "C:/Temp/reify";
+
+    static final protected String STATUSCODEHEADER = "x-reify-status";
 
     //////////////////////////////////////////////////
     // Type Decls
 
-    static class TestCase
+    static abstract class AbstractTestCase
     {
-        static String inputroot = null;
-        static String baselineroot = null;
+        static public String downloadroot = DOWNLOADDIR;
+        static public String testdirs = TESTINPUTDIR;
 
-        static public void
-        setRoots(String input, String baseline)
-        {
-            inputroot = input;
-            baselineroot = baseline;
-        }
+        //////////////////////////////////////////////////
 
-        protected String dataset;
-        protected String testinputpath;
-        protected String baselinepath;
+        protected ReifyUtils.Command cmd;
+        protected String url;
+        protected String target;
         protected Map<String, String> params = new HashMap<>();
 
-        protected TestCase(String dataset, String params, String baseline)
+        AbstractTestCase(String cmd, String url, String target, String[] params)
         {
-            this.dataset = dataset;
-            this.testinputpath = canonjoin(this.inputroot, dataset);
-            this.baselinepath = canonjoin(this.baselineroot, baseline);
-	    String[] paramlist = params.split("[;]")
-            for(int i = 0; i < paramlist.length; i++) {
-                String[] pieces = paramlist[i].trim().split("[=]");
+
+            this.cmd = ReifyUtils.Command.parse(cmd);
+            this.params.put("request", this.cmd.name().toLowerCase());
+
+            this.url = url;
+            if(this.url != null) this.params.put("url", this.url);
+
+            this.target = HTTPUtil.canonicalpath(target);
+            if(this.target != null) this.params.put("target", this.target);
+
+            for(int i = 0; i < params.length; i++) {
+                String[] pieces = params[i].trim().split("[=]");
                 if(pieces.length == 1)
                     this.params.put(pieces[0].trim().toLowerCase(), "");
                 else
                     this.params.put(pieces[0].trim().toLowerCase(), pieces[1].trim());
             }
-            this.params.put("testing","true");
+            if(this.testdirs != null)
+                this.params.put("testinfo", "testdirs=" + testdirs);
         }
 
-        String makeurl()
+        //////////////////////////////////////////////////
+        // Subclass defined
+
+        abstract public Map<String, String> getReply();
+
+        //////////////////////////////////////////////////
+        // Accessors
+
+        public ReifyUtils.Command getCommand()
         {
-            String u = canonjoin(URLPREFIX, this.dataset);
-            return u;
+            return this.cmd;
         }
 
-        String getBaseline()
+        public String getURL()
         {
-            return this.baselinepath;
+            return this.url;
         }
 
-        String getTestpath()
-        {
-            String u = this.testinputpath;
-            return u;
-        }
-
-        Map<String, String> getParams()
+        public Map<String, String> getParams()
         {
             return this.params;
         }
 
+
         public String toString()
         {
-            return this.dataset;
+            StringBuilder buf = new StringBuilder();
+            buf.append(this.getURL());
+            boolean first = true;
+            for(Map.Entry<String, String> entry : this.params.entrySet()) {
+                buf.append(String.format("%s%s=%s", first ? "?" : "&",
+                        entry.getKey(), entry.getValue()));
+            }
+            return buf.toString();
         }
     }
 
-    static protected void setTESTDIRS(String... dirs)
+    //////////////////////////////////////////////////
+    // Instance variables
+
+    protected List<AbstractTestCase> alltestcases = new ArrayList<>();
+
+    //////////////////////////////////////////////////
+
+    abstract void defineAllTestCases();
+
+    abstract void doOneTest(AbstractTestCase tc) throws Exception;
+
+    //////////////////////////////////////////////////    
+
+    public void
+    doAllTests()
+            throws Exception
     {
-        ReifyController.TESTDIRS = dirs;
+        Assert.assertTrue("No defined testcases", this.alltestcases.size() > 0);
+        for(int i = 0; i < this.alltestcases.size(); i++) {
+            doOneTest(this.alltestcases.get(i));
+        }
     }
+
+    //////////////////////////////////////////////////
+    // Utilities
+
+    public String
+    getDefaultDownloadDir(String server)
+    {
+        StringBuilder b = new StringBuilder();
+        b.append(server);
+        b.append("/");
+        b.append("?request=inquire&inquire=downloaddir");
+        int[] codep = new int[1];
+        String sresult = null;
+        try {
+            sresult = callserver(b.toString(), codep);
+        } catch (IOException e) {
+            System.err.println("Server call failure: " + e.getMessage());
+            return null;
+        }
+        if(codep[0] != 200) {
+            System.err.println("Server call failed: status=" + codep[0]);
+            return null;
+        }
+        Map<String, String> result = ReifyUtils.parseMap(sresult, ';', true);
+        String dld = HTTPUtil.canonicalpath(result.get("downloaddir"));
+        return dld;
+    }
+
+    public String
+    callserver(String url, int[] codep)
+            throws IOException
+    {
+        // Make method call
+        byte[] bytes = null;
+        codep[0] = 0;
+        try (HTTPMethod method = HTTPFactory.Get(url)) {
+            method.execute();
+            codep[0] = method.getStatusCode();
+            org.apache.http.Header h = method.getResponseHeader(STATUSCODEHEADER);
+            if(h != null) {
+                String scode = h.getValue();
+                int code;
+                try {
+                    code = Integer.parseInt(scode);
+                    if(code > 0)
+                        codep[0] = code;
+                } catch (NumberFormatException e) {
+                    code = 0;
+                }
+            }
+            bytes = method.getResponseAsBytes();
+        }
+        // Convert to string
+        String sbytes = "";
+        if(bytes != null && bytes.length > 0)
+            sbytes = new String(bytes, "utf8");
+        if(codep[0] != 200)
+            return sbytes;
+        String result = ReifyUtils.urlDecode(sbytes);
+        return result;
+    }
+
+    static public String
+    replyCompare(Map<String, String> result, Map<String, String> base)
+    {
+        StringBuilder b = new StringBuilder();
+        // do two ways to catch added plus new
+        for(Map.Entry<String, String> entry : result.entrySet()) {
+            String basevalue = base.get(entry.getKey());
+            if(basevalue == null) {
+                b.append(String.format("Added: %s%n",
+                        entry.getKey()));
+            } else {
+                String rvalue = entry.getValue();
+                if(!rvalue.equals(basevalue)) {
+                    b.append(String.format("Change: %s: %s to %s%n",
+                            entry.getKey(), basevalue, rvalue));
+                }
+            }
+        }
+        for(Map.Entry<String, String> entry : base.entrySet()) {
+            String rvalue = result.get(entry.getKey());
+            if(rvalue == null) {
+                b.append(String.format("Deleted: %s%n",
+                        entry.getKey()));
+            }
+        }
+        return (b.toString().length() > 0 ? b.toString() : null);
+    }
+
+    /**
+     *
+     * @param root delete all files under this root
+     * @param deleteroot true => delete root also
+     * @return   true if delete suceeded
+     */
+    static public boolean
+    deleteTree(String root, boolean deleteroot)
+    {
+        if(root == null || root.length() == 0)
+            return false;
+        File rootfile = new File(root);
+        if(!rootfile.exists()) return false;
+        if(!deleteTree(rootfile)) return false;
+        if(deleteroot && !rootfile.delete()) return false;
+        return true;
+    }
+
+    static protected boolean
+    deleteTree(File root)
+    {
+        File[] contents = root.listFiles();
+        for(File f : contents) {
+            if(f.isDirectory() && !deleteTree(f)) return false;
+            if(!f.delete()) return false;
+        }
+        return true;
+    }
+
+    //////////////////////////////////////////////////
+    // Support classes
 
     static /*package*/ class NullValidator implements Validator
     {
@@ -134,84 +279,4 @@ public class TestReify extends UnitTestCommon
         }
     }
 
-    //////////////////////////////////////////////////
-    // Instance variables
-
-    @Autowired
-    protected WebApplicationContext wac;
-    protected String resourceroot = null;
-    protected MockMvc mockMvc = null;
-
-
-    //////////////////////////////////////////////////
-    // Constructor(s)
-
-    public TestReify()
-    {
-    }
-
-    //////////////////////////////////////////////////
-    // Junit test methods
-
-    @Before
-    public void setup()
-            throws ServletException
-    {
-        StandaloneMockMvcBuilder mvcbuilder =
-                MockMvcBuilders.standaloneSetup(new ReifyController());
-        mvcbuilder.setValidator(new NullValidator());
-        this.mockMvc = mvcbuilder.build();
-        setTESTDIRS(TESTINPUTDIR);
-        TestCase.setRoots(TESTINPUTDIR, BASELINEDIR);
-        try {
-            // Registers Nc4Iosp in front of all the other IOSPs already registered in NetcdfFile.<clinit>().
-            // Crucially, this means that we'll try to open a file with Nc4Iosp before we try it with H5iosp.
-            NetcdfFile.registerIOProvider(Nc4Iosp.class);
-        } catch (IllegalAccessException | InstantiationException e) {
-            log.error("CdmInit: Unable to register IOSP: " + Nc4Iosp.class.getCanonicalName(), e);
-        }
-    }
-
-    @Test
-    public void testReify()
-            throws Exception
-    {
-        for(int i = 0; i < TESTCASES.length; i++) {
-            doOneTest(TESTCASES[i]);
-        }
-    }
-
-    //////////////////////////////////////////////////
-    // Primary test method
-    void
-    doOneTest(TestCase test)
-            throws Exception
-    {
-        String url = test.makeurl();
-
-        System.out.println("Testcase: get: " + url);
-
-        MockHttpServletRequestBuilder rb = MockMvcRequestBuilders
-                .get(url)
-                .servletPath(url);
-        for(Map.Entry<String, String> entry : test.getParams().entrySet()) {
-            rb.param(entry.getKey(), entry.getValue());
-        }
-        MvcResult result = this.mockMvc.perform(rb).andReturn();
-
-        // Collect the output
-        MockHttpServletResponse res = result.getResponse();
-
-        byte[] byteresult = res.getContentAsByteArray();
-
-        // Convert the raw output to a string
-        String sresult = new String(byteresult, UTF8);
-        if(prop_visual)
-            visual("TestReify", sresult);
-
-        if(prop_diff) { //compare with baseline
-            Assert.assertTrue("***Fail", same(getTitle(), test.baseline, sresult));
-        }
-
-    }
 }

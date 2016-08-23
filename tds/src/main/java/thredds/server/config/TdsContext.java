@@ -1,35 +1,8 @@
 /*
- * Copyright 1998-2015 John Caron and University Corporation for Atmospheric Research/Unidata
- *
- *  Portions of this software were developed by the Unidata Program at the
- *  University Corporation for Atmospheric Research.
- *
- *  Access and use of this software shall impose the following obligations
- *  and understandings on the user. The user is granted the right, without
- *  any fee or cost, to use, copy, modify, alter, enhance and distribute
- *  this software, and any derivative works thereof, and its supporting
- *  documentation for any purpose whatsoever, provided that this entire
- *  notice appears in all copies of the software, derivative works and
- *  supporting documentation.  Further, UCAR requests that the user credit
- *  UCAR/Unidata in any publications that result from the use of this
- *  software or in any product that includes this software. The names UCAR
- *  and/or Unidata, however, may not be used in any advertising or publicity
- *  to endorse or promote any products or commercial entity unless specific
- *  written permission is obtained from UCAR/Unidata. The user also
- *  understands that UCAR/Unidata is not obligated to provide the user with
- *  any support, consulting, training or assistance of any kind with regard
- *  to the use, operation and performance of this software nor to provide
- *  the user with any updates, revisions, new versions or "bug fixes."
- *
- *  THIS SOFTWARE IS PROVIDED BY UCAR/UNIDATA "AS IS" AND ANY EXPRESS OR
- *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- *  DISCLAIMED. IN NO EVENT SHALL UCAR/UNIDATA BE LIABLE FOR ANY SPECIAL,
- *  INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING
- *  FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- *  NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
- *  WITH THE ACCESS, USE OR PERFORMANCE OF THIS SOFTWARE.
+ * Copyright 1998-2015 University Corporation for Atmospheric Research/Unidata
+ *  See the LICENSE file for more information.
  */
+
 package thredds.server.config;
 
 import org.slf4j.Logger;
@@ -94,6 +67,12 @@ public final class TdsContext implements ServletContextAware, InitializingBean, 
   @Value("${tds.content.root.path}")
   private String contentRootPathProperty; // wants a trailing slash
 
+  @Value("${tds.upload.dir}")
+  private String uploadDirProperty;
+
+  @Value("${tds.download.dir}")
+  private String downloadDirProperty;
+
   private ServletContext servletContext;
 
   ///////////////////////////////////////////
@@ -107,6 +86,8 @@ public final class TdsContext implements ServletContextAware, InitializingBean, 
   private File publicContentDirectory;
   private File startupContentDirectory;
   private File tomcatLogDir;
+  private File uploadDir;
+  private File downloadDir;
 
   private FileSource publicContentDirSource;
   // private FileSource catalogRootDirSource;  // look for catalog files at this(ese) root(s)
@@ -237,6 +218,83 @@ public final class TdsContext implements ServletContextAware, InitializingBean, 
     //jspRequestDispatcher = servletContext.getNamedDispatcher("jsp");
     defaultRequestDispatcher = servletContext.getNamedDispatcher("default");
 
+    ////////////////////////////////
+
+    String uploadDirKey = "tds.upload.dir";
+    this.uploadDir = null;
+
+    // In applicationContext-tdsConfig.xml, we have ignoreUnresolvablePlaceholders set to "true".
+    // As a result, when properties aren't defined, they will keep their placeholder String.
+    // In this case, that's "${tds.upload.dir}".
+    if (this.uploadDirProperty.equals("${tds.upload.dir}")) {
+      String msg = String.format("\"%s\" property isn't defined.", uploadDirKey);
+      logServerStartup.warn("TdsContext.init(): " + msg);
+    } else {
+      uploadDirProperty = StringUtil2.replace(uploadDirProperty, "\\", "/");
+      if (!uploadDirProperty.endsWith("/"))
+	    uploadDirProperty += "/";
+      // Set the content directory and source.
+      File updir = new File(this.uploadDirProperty);
+      if (!updir.isAbsolute()) {
+        String msg = String.format("\"%s=%s\" value must be an absolutepath.", uploadDirKey,this.uploadDirProperty);
+        logServerStartup.warn("TdsContext.init(): " + msg);
+      } else {
+        // Make sure upload dir exists and is read/writeable
+        if(!updir.exists() && !updir.mkdirs()) {
+            logServerStartup.warn("TdsContext.init(): " +
+              String.format("Upload directory: %s=%s does not exist and cannot create.",
+                    uploadDirKey,uploadDirProperty));
+        } else if(!updir.isDirectory())  {
+          logServerStartup.warn("TdsContext.init(): " +
+                  String.format("Upload directory: %s=%s is not a directory.",
+                            uploadDirKey,uploadDirProperty));
+        } else if(!updir.canRead() || !updir.canWrite()) {
+          logServerStartup.warn("TdsContext.init(): " +
+                           String.format("Upload directory: %s=%s must be readable and writeable.",
+                                     uploadDirKey,uploadDirProperty));
+        } else
+          this.uploadDir = updir;
+      }
+    }
+
+
+    String downloadDirKey = "tds.download.dir";
+    this.downloadDir = null;
+
+    // In applicationContext-tdsConfig.xml, we have ignoreUnresolvablePlaceholders set to "true".
+    // As a result, when properties aren't defined, they will keep their placeholder String.
+    // In this case, that's "${tds.download.dir}".
+    if (this.downloadDirProperty.equals("${tds.download.dir}")) {
+      String msg = String.format("\"%s\" property isn't defined.", downloadDirKey);
+      logServerStartup.warn("TdsContext.init(): " + msg);
+    } else {
+      downloadDirProperty = StringUtil2.replace(downloadDirProperty, "\\", "/");
+      if (!downloadDirProperty.endsWith("/"))
+	    downloadDirProperty += "/";
+      // Set the content directory and source.
+      File downdir = new File(this.downloadDirProperty);
+      if (!downdir.isAbsolute()) {
+        String msg = String.format("\"%s=%s\" value must be an absolutepath.", downloadDirKey,this.downloadDirProperty);
+        logServerStartup.warn("TdsContext.init(): " + msg);
+      } else {
+        // Make sure download dir exists and is read/writeable
+        if(!downdir.exists()) {
+            logServerStartup.warn("TdsContext.init(): " +
+              String.format("Download directory: %s=%s does not exist.",
+                    downloadDirKey,downloadDirProperty));
+        } else if(!downdir.isDirectory())  {
+          logServerStartup.warn("TdsContext.init(): " +
+                  String.format("Download directory: %s=%s is not a directory.",
+                            downloadDirKey,downloadDirProperty));
+        } else if(!downdir.canRead() || !downdir.canWrite()) {
+          logServerStartup.warn("TdsContext.init(): " +
+                           String.format("Download directory: %s=%s must be readable and writeable.",
+                                     downloadDirKey,downloadDirProperty));
+        } else
+          this.downloadDir = downdir;
+      }
+    }
+
     //////////////////////////////////// Copy default startup files, if necessary ////////////////////////////////////
 
     try {
@@ -318,6 +376,10 @@ public final class TdsContext implements ServletContextAware, InitializingBean, 
     sb.append("\n");
     sb.append("\n  servletRootDir=   ").append(servletRootDirectory);
     sb.append("\n  contentRootDir=   ").append(contentRootDir);
+    if(this.uploadDir != null)
+      sb.append("\n  uploadDir=   ").append(uploadDir);
+    if(this.downloadDir != null)
+      sb.append("\n  downloadDir=   ").append(downloadDir);
     sb.append("\n  threddsDirectory= ").append(threddsDirectory);
     sb.append("\n  publicContentDir= ").append(publicContentDirectory);
     sb.append("\n  startupContentDir=").append(startupContentDirectory);
@@ -416,12 +478,28 @@ public final class TdsContext implements ServletContextAware, InitializingBean, 
     return this.configFileProperty;
   }
 
+  public File getUploadDir() {
+    return uploadDir;
+  }
+
+  public File getDownloadDir() {
+    return downloadDir;
+  }
 
   /////////////////////////////////////////////////////
 
   // used by MockTdsContextLoader
+
   public void setContentRootPathProperty(String contentRootPathProperty) {
     this.contentRootPathProperty = contentRootPathProperty;
+  }
+
+  public void setUploadDirProperty(String uploadDirProperty) {
+    this.uploadDirProperty = uploadDirProperty;
+  }
+
+  public void setDownloadDirProperty(String downloadDirProperty) {
+    this.downloadDirProperty = downloadDirProperty;
   }
 
 }

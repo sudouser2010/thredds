@@ -27,7 +27,7 @@
   <!-- urls intended to test container auth without spring -->
   <datasetRoot path="containerauth" location="content/testdata"/>
 
-  <dataset name="Test Single Dataset" ID="testDataset" serviceName="odap" urlPath="localContent/testData.nc" dataType="Grid"/>
+  <dataset name="Test Single Dataset" ID="testDataset" serviceName="all" urlPath="localContent/testData.nc" dataType="Grid"/>
   <dataset name="Test Dap4 Dataset" ID="testDap4Dataset" serviceName="dap4" urlPath="cdmUnitTest/ft/grid/03061219_ruc.nc" dataType="Grid"/>
   <dataset name="Test Restricted Dataset" ID="testRestrictedDataset" serviceName="all" urlPath="testRestrictedDataset/testData2.nc" restrictAccess="tiggeData"/>
   <!-- Actual dataset intended to test container auth without spring -->
@@ -53,6 +53,13 @@
     <ncml:netcdf xmlns:ncml="http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2"
                  location="http://eosdap.hdfgroup.uiuc.edu:8080/opendap/data/NASAFILES/hdf4/AIRS.2002.08.01.L3.RetStd_H031.v4.0.21.0.G06104133732.hdf"/>
   </dataset>
+
+  <datasetScan name="Uploaded Files" ID="upload" location="${tds.upload.dir}" path="upload/">
+    <metadata inherited="true">
+      <serviceName>all</serviceName>
+      <dataType>Station</dataType>
+    </metadata>
+  </datasetScan>
 
   <datasetScan name="Test Scan Local (no ID)" path="scanLocal" location="content/testdata/">
     <metadata inherited="true">
