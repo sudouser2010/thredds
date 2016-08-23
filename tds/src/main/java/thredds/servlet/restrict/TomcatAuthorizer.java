@@ -1,5 +1,5 @@
 /*
- * Copyright 1998-2015 University Corporation for Atmospheric Research/Unidata
+ * Copyright 1998-2015 John Caron and University Corporation for Atmospheric Research/Unidata
  *
  *  Portions of this software were developed by the Unidata Program at the
  *  University Corporation for Atmospheric Research.
@@ -49,24 +49,13 @@ import thredds.servlet.ServletUtil;
  * @author caron
  */
 public class TomcatAuthorizer implements Authorizer {
-
-  static protected final String DEFAULTRESTRICTEDPATH = "restrictedAccess";
-
-  static protected org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger( TomcatAuthorizer.class);
+  private static org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger( TomcatAuthorizer.class);
 
   @Autowired
-  protected TdsContext tdsContext;
+  private TdsContext tdsContext;
 
-  protected boolean useSSL = false;
-  protected String sslPort = "8443";
-
-  protected String restrictedpath = DEFAULTRESTRICTEDPATH;
-
-  public void setRestrictedPath(String path)    {
-    if(path == null || path.length() == 0)
-	throw new IllegalArgumentException(this.getClass().getName()+".setRestrictedPath");
-    this.restrictedpath = path;
-  }
+  private boolean useSSL = false;
+  private String sslPort = "8443";
 
   public void setUseSSL(boolean useSSL) {
     this.useSSL = useSSL;
@@ -93,17 +82,9 @@ public class TomcatAuthorizer implements Authorizer {
     session.setAttribute("origRequest", ServletUtil.getRequest(req));
     session.setAttribute("role", role);
 
-    StringBuilder ubuf = new StringBuilder();
-    ubuf.append(useSSL?"https://":"http://");
-    ubuf.append(req.getServerName());
-    ubuf.append(':');
-    ubuf.append(useSSL?sslPort:req.getServerPort());
-    ubuf.append(tdsContext.getContextPath());
-    ubuf.append('/');
-    ubuf.append(restrictedpath);
-    ubuf.append('/');
-    ubuf.append(role);
-    String urlr = ubuf.toString();
+    String urlr = useSSL ? "https://" + req.getServerName() + ":"+ sslPort + tdsContext.getContextPath()+"/restrictedAccess/" + role :
+                           "http://" + req.getServerName() + ":"+ req.getServerPort() + tdsContext.getContextPath()+"/restrictedAccess/" + role;
+
     if (log.isDebugEnabled()) log.debug("redirect to = {}", urlr);
     res.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
     res.addHeader("Location", urlr);
