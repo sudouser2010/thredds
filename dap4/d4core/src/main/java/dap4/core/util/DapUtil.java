@@ -50,8 +50,7 @@ abstract public class DapUtil // Should only contain static methods
     static final public int CHECKSUMSIZE = 4; // bytes if CRC32
     static final public String DIGESTER = "CRC32";
 
-    static final public String DRIVELETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            + "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toLowerCase();
+    static final public String DRIVELETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
     //////////////////////////////////////////////////
     // return last name part of an fqn; result will be escaped.

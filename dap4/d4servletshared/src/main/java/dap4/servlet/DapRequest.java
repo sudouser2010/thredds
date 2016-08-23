@@ -140,7 +140,9 @@ public class DapRequest
         buf.append("://");
         buf.append(request.getServerName());
         int port = request.getServerPort();
-        if(port > 0) {
+        if(port > 0)
+
+        {
             buf.append(":");
             buf.append(port);
         }
