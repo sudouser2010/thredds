@@ -225,11 +225,11 @@
 
   <catalogScan location="catalogs5" path="catalogs5" name="catalog scan with version 5 features"/>
 
-  <datasetScan name="Uploaded Files" ID="upload" location="${tds.upload.dir}" path="upload/">
+  <!-- datasetScan name="Uploaded Files" ID="upload" location="${tds.upload.dir}" path="upload/">
     <metadata inherited="true">
       <serviceName>all</serviceName>
       <dataType>Station</dataType>
     </metadata>
-  </datasetScan>
+  </datasetScan -->
 
 </catalog>
