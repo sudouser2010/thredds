@@ -54,13 +54,6 @@
                  location="http://eosdap.hdfgroup.uiuc.edu:8080/opendap/data/NASAFILES/hdf4/AIRS.2002.08.01.L3.RetStd_H031.v4.0.21.0.G06104133732.hdf"/>
   </dataset>
 
-  <datasetScan name="Uploaded Files" ID="upload" location="${tds.upload.dir}" path="upload/">
-    <metadata inherited="true">
-      <serviceName>all</serviceName>
-      <dataType>Station</dataType>
-    </metadata>
-  </datasetScan>
-
   <datasetScan name="Test Scan Local (no ID)" path="scanLocal" location="content/testdata/">
     <metadata inherited="true">
       <serviceName>all</serviceName>
@@ -231,5 +224,12 @@
   <catalogRef xlink:title="RDA" xlink:href="testRdaProblems.xml" name=""/>
 
   <catalogScan location="catalogs5" path="catalogs5" name="catalog scan with version 5 features"/>
+
+  <datasetScan name="Uploaded Files" ID="upload" location="${tds.upload.dir}" path="upload/">
+    <metadata inherited="true">
+      <serviceName>all</serviceName>
+      <dataType>Station</dataType>
+    </metadata>
+  </datasetScan>
 
 </catalog>

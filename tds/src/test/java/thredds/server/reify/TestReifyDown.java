@@ -126,8 +126,11 @@ public class TestReifyDown extends TestReify
         Map<String, String> result = ReifyUtils.parseMap(s, ';', true);
 
         if(prop_visual) {
-            String text = ReifyUtils.toString(result, false);
-            visual("TestReifyDap", text);
+            String sent = ReifyUtils.urlDecode(url);
+            String recvd = ReifyUtils.toString(result, false);
+            visual("TestReify.url:", url);
+            visual("TestReify.sent:", sent);
+            visual("TestReify.recieved:", recvd);
         }
 
         if(prop_diff) {
