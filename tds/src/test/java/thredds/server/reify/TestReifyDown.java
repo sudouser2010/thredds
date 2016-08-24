@@ -13,6 +13,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+@Category({NotJenkins.class,NotTravis.class})
 public class TestReifyDown extends TestReify
 {
     static protected final boolean DEBUG = false;
