@@ -300,7 +300,6 @@ public class EscapeStrings {
     return newurl;
   }
 
-
   /**
    * Define the DAP escape identifier function.
    *
@@ -393,7 +392,6 @@ public class EscapeStrings {
 
     return sb.toString();
   }
-
 
   /**
    * Tokenize an escaped name using "." as delimiter, skipping "\."
