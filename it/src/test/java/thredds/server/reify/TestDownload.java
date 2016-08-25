@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import ucar.httpservices.HTTPUtil;
 import ucar.unidata.util.test.category.NotJenkins;
 import ucar.unidata.util.test.category.NotTravis;
@@ -16,7 +17,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-@Category({NotJenkins.class,NotTravis.class})
 public class TestDownload extends TestReify
 {
     static protected final boolean DEBUG = false;
@@ -102,7 +102,6 @@ public class TestDownload extends TestReify
     testDownload()
             throws Exception
     {
-        //
         super.doAllTests();
     }
 

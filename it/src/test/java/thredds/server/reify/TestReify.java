@@ -4,12 +4,7 @@
 
 package thredds.server.reify;
 
-import dap4.core.util.DapUtil;
 import org.junit.Assert;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import ucar.httpservices.HTTPFactory;
@@ -24,12 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration({
-        "/WEB-INF/applicationContext.xml",
-        "/WEB-INF/spring-servlet.xml",
-})
-@WebAppConfiguration
 abstract public class TestReify extends UnitTestCommon
 {
     static protected final boolean DEBUG = false;
