@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Category({NotJenkins.class,NotTravis.class})
-public class TestReifyDown extends TestReify
+public class TestDownload extends TestReify
 {
     static protected final boolean DEBUG = false;
 
@@ -25,7 +25,6 @@ public class TestReifyDown extends TestReify
     // Constants
 
     static protected final String DEFAULTSERVER = "localhost:8081";
-    static protected final String BASELINEDIR = RESOURCEDIR + "/baseline";
     static protected final String DEFAULTREIFYURL = "http://" + DEFAULTSERVER + THREDDSPREFIX + SERVLETPREFIX;
 
     //////////////////////////////////////////////////
@@ -34,7 +33,6 @@ public class TestReifyDown extends TestReify
     static class TestCase extends AbstractTestCase
     {
         static public String server = DEFAULTSERVER;
-        static String baselineroot = BASELINEDIR;
         static String svcdir = null;
 
         static public void setServerDir(String dir)
@@ -101,7 +99,7 @@ public class TestReifyDown extends TestReify
 
     @Test
     public void
-    testReifyDown()
+    testDownload()
             throws Exception
     {
         //
@@ -126,11 +124,11 @@ public class TestReifyDown extends TestReify
         Map<String, String> result = ReifyUtils.parseMap(s, ';', true);
 
         if(prop_visual) {
-            String sent = ReifyUtils.urlDecode(url);
+            String decoded = ReifyUtils.urlDecode(url);
             String recvd = ReifyUtils.toString(result, false);
-            visual("TestReify.url:", url);
-            visual("TestReify.sent:", sent);
-            visual("TestReify.recieved:", recvd);
+            visual("TestReify.url:", decoded);
+            visual("TestReify.sent:", url);
+            visual("TestReify.received:", recvd);
         }
 
         if(prop_diff) {

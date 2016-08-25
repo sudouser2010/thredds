@@ -43,8 +43,9 @@ import static thredds.server.reify.ReifyUtils.SendError;
 
 
 /**
- * Local File Materialization for server-side computing.
- * The tag for this controller is .../reify/*
+ * Local File Materialization (aka reification)
+ * for server-side computing.
+ * The tag for this controller is .../download/*
  * <p>
  * The goal for this controller is to allow external code to have the
  * thredds server materialize a dataset into the file system.
@@ -66,11 +67,11 @@ import static thredds.server.reify.ReifyUtils.SendError;
  * server, or at least has a common file system so that file system
  * writes by thredds are visible to the external code.
  * <p>
- * Note that in order to support reification of non-file datasets
- * (e.g. via DAP2 or DAP4) the reify code on the server will
+ * Note that in order to support downloading of non-file datasets
+ * (e.g. via DAP2 or DAP4) this controller will
  * re-call the server to obtain the output of the request. Experimentation
  * shows this is not a problem. Circularity is tested to ensure
- * the no reification loop occurs.
+ * the no download loop occurs.
  * <p>
  * Issues:
  * 1. What file formats are allowed for materialized datasets?
@@ -94,11 +95,13 @@ import static thredds.server.reify.ReifyUtils.SendError;
  * ignored and replaced with the "<host>+<port>/thredds" of the thredds
  * server. This is to prevent attempts to use the thredds server to access
  * external data sources, which would otherwise provide a security leak.
- * 2. If the target path is relative then the Reify Servlet must have
- * access to a -Dtds.download.dir java flag. The relative path
- * is with respect to that flag's value. In case, the path must be
+ * 2. The target path must be a relative path. It is interpreted as relative
+ * to the value of a -Dtds.download.dir java flag, which must specify
+ * an absolute path to a directory into which the downloads are stored.
+ * Assuming the Tomcat server is being used, then the path must be
  * writeable by user tomcat, which means that its owner will end up
- * being user tomcat.
+ * being user tomcat or at least tomcat must be in the group assigned to
+ * this directory.
  * <p>
  * Return value: download=<absolute path to which file was downloaded>
  * <p>
@@ -115,7 +118,7 @@ import static thredds.server.reify.ReifyUtils.SendError;
  */
 
 @Controller
-@RequestMapping("/reify")
+@RequestMapping("/download")
 public class ReifyController
 {
     //////////////////////////////////////////////////
@@ -124,11 +127,11 @@ public class ReifyController
     static final protected boolean DEBUG = true;
 
     static final protected String DEFAULTSERVLETNAME = "thredds";
-    static final protected String DEFAULTREIFYNAME = "reify";
+    static final protected String DEFAULTREQUESTNAME = "download";
 
     static final protected String DEFAULTDOWNLOADDIR = "download";
 
-    static final protected String STATUSCODEHEADER = "x-reify-status";
+    static final protected String STATUSCODEHEADER = "x-download-code";
 
     static final protected String FILESERVERSERVLET = "/fileServer/";
 
@@ -160,7 +163,7 @@ public class ReifyController
     protected boolean getInitialized = false;
 
     protected String server = null; // Our host + port
-    protected String reifyname = null;
+    protected String requestname = null;
     protected String threddsname = null;
 
     protected Nc4Chunking.Strategy strategy = Nc4Chunking.Strategy.standard;
@@ -209,17 +212,15 @@ public class ReifyController
         log.info(getClass().getName() + " GET initialization");
 
         // Obtain servlet path info
-        String threddsname = HTTPUtil.canonicalpath(req.getContextPath());
-        String reifyname = HTTPUtil.canonicalpath(req.getServletPath());
-        reifyname = HTTPUtil.relpath(reifyname);
-        threddsname = HTTPUtil.relpath(threddsname);
+        String tmp = HTTPUtil.canonicalpath(req.getContextPath());
+        this.threddsname = HTTPUtil.relpath(tmp);
+        tmp = HTTPUtil.canonicalpath(req.getServletPath());
+        this.requestname = HTTPUtil.relpath(tmp);
 
-        if(threddsname == null || threddsname.length() == 0)
-            threddsname = DEFAULTSERVLETNAME;
-        if(reifyname == null || reifyname.length() == 0)
-            reifyname = DEFAULTREIFYNAME;
-        this.reifyname = reifyname;
-        this.threddsname = threddsname;
+        if(this.threddsname == null || this.threddsname.length() == 0)
+            this.threddsname = DEFAULTSERVLETNAME;
+        if(this.requestname == null || this.requestname.length() == 0)
+            this.requestname = DEFAULTREQUESTNAME;
 
         // Get server host + port name
         StringBuilder buf = new StringBuilder();
@@ -362,9 +363,9 @@ public class ReifyController
 
         // Make sure we are not recursing
         String path = uri.getPath();
-        if(path.toLowerCase().indexOf(this.reifyname) >= 0)
+        if(path.toLowerCase().indexOf(this.requestname) >= 0)
             throw new SendError(HttpServletResponse.SC_FORBIDDEN,
-                    String.format("URL is recursive on /reify: %s", path));
+                    String.format("URL is recursive on /%s: %s", this.requestname, path));
 
         // Make sure that path starts with "/thredds"
         if(!path.startsWith("/" + this.threddsname))

@@ -26,8 +26,8 @@ import java.util.Map;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({
-        "file:d:/git/reify/tds/src/main/webapp/WEB-INF/applicationContext.xml",
-        "file:d:/git/reify/tds/src/main/webapp/WEB-INF/spring-servlet.xml",
+        "/WEB-INF/applicationContext.xml",
+        "/WEB-INF/spring-servlet.xml",
 })
 @WebAppConfiguration
 abstract public class TestReify extends UnitTestCommon
@@ -38,14 +38,10 @@ abstract public class TestReify extends UnitTestCommon
     // Constants
 
     static protected final String THREDDSPREFIX = "/thredds";
-    static protected final String SERVLETPREFIX = "/reify";
-    static protected final String TESTINPUTSUFFIX = "/src/test/resources/thredds/server/reify";
-    static protected final String RESOURCEDIR
-            = DapUtil.canonicalpath(System.getProperty("user.dir")) + TESTINPUTSUFFIX;
-    static protected final String TESTINPUTDIR = RESOURCEDIR + "/testfiles";
-    static protected final String DOWNLOADDIR = "C:/Temp/reify";
+    static protected final String SERVLETPREFIX = "/download";
+    static protected final String DOWNLOADDIR = "C:/Temp/download";
 
-    static final protected String STATUSCODEHEADER = "x-reify-status";
+    static final protected String STATUSCODEHEADER = "x-download-status";
 
     //////////////////////////////////////////////////
     // Type Decls
@@ -53,7 +49,6 @@ abstract public class TestReify extends UnitTestCommon
     static abstract class AbstractTestCase
     {
         static public String downloadroot = DOWNLOADDIR;
-        static public String testdirs = TESTINPUTDIR;
 
         //////////////////////////////////////////////////
 
@@ -81,8 +76,6 @@ abstract public class TestReify extends UnitTestCommon
                 else
                     this.params.put(pieces[0].trim().toLowerCase(), pieces[1].trim());
             }
-            if(this.testdirs != null)
-                this.params.put("testinfo", "testdirs=" + testdirs);
         }
 
         //////////////////////////////////////////////////
