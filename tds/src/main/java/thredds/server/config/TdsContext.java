@@ -15,7 +15,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.context.ServletContextAware;
 import org.springframework.web.util.Log4jWebConfigurer;
 import thredds.featurecollection.InvDatasetFeatureCollection;
-import thredds.util.filesource.*;
+import thredds.util.filesource.BasicDescendantFileSource;
+import thredds.util.filesource.DescendantFileSource;
+import thredds.util.filesource.FileSource;
 import ucar.nc2.util.IO;
 import ucar.unidata.util.StringUtil2;
 
@@ -23,7 +25,7 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Formatter;
 
 /**
  * TDScontext implements ServletContextAware so it gets a ServletContext and performs most initial THREDDS set up:
@@ -34,179 +36,185 @@ import java.util.*;
  * - creates, if don't exist, log and public dirs in content directory
  * - Get default and jsp dispatchers from servletContext
  * - Creates and initializes the TdsConfigMapper
- *
+ * <p>
  * LOOK would be nice to make Immutable
+ *
  * @author edavis
  * @since 4.0
  */
 @Component("TdsContext")
-public final class TdsContext implements ServletContextAware, InitializingBean, DisposableBean {
-  private final Logger logServerStartup = LoggerFactory.getLogger("serverStartup");
+public final class TdsContext implements ServletContextAware, InitializingBean, DisposableBean
+{
+    private final Logger logServerStartup = LoggerFactory.getLogger("serverStartup");
 
-  /////////////////
-  // Properties from tds.properties
+    /////////////////
+    // Properties from tds.properties
 
-  // The values for these properties all come from WEB-INF/classes/thredds/server/tds.properties except for
-  // "tds.content.root.path", which must be defined on the command line.
+    // The values for these properties all come from WEB-INF/classes/thredds/server/tds.properties except for
+    // "tds.content.root.path", which must be defined on the command line.
 
-  @Value("${tds.version}")
-  private String tdsVersion;
+    @Value("${tds.version}")
+    private String tdsVersion;
 
-  @Value("${tds.version.builddate}")
-  private String tdsVersionBuildDate;
+    @Value("${tds.version.builddate}")
+    private String tdsVersionBuildDate;
 
-  @Value("${tds.content.path}")
-  private String contentPathProperty;
+    @Value("${tds.content.path}")
+    private String contentPathProperty;
 
-  @Value("${tds.content.startup.path}")
-  private String contentStartupPathProperty;
+    @Value("${tds.content.startup.path}")
+    private String contentStartupPathProperty;
 
-  @Value("${tds.config.file}")
-  private String configFileProperty;
+    @Value("${tds.config.file}")
+    private String configFileProperty;
 
-  @Value("${tds.content.root.path}")
-  private String contentRootPathProperty; // wants a trailing slash
+    @Value("${tds.content.root.path}")
+    private String contentRootPathProperty; // wants a trailing slash
 
-  @Value("${tds.upload.dir}")
-  private String uploadDirProperty;
+    @Value("${tds.upload.dir}")
+    private String uploadDirProperty;
 
-  @Value("${tds.download.dir}")
-  private String downloadDirProperty;
+    @Value("${tds.download.dir}")
+    private String downloadDirProperty;
 
-  private ServletContext servletContext;
+    private ServletContext servletContext;
 
-  ///////////////////////////////////////////
+    ///////////////////////////////////////////
 
-  private String contextPath;
-  private String webappDisplayName;
+    private String contextPath;
+    private String webappDisplayName;
 
-  private File servletRootDirectory;       // servletContext.getRealPath("/")
-  private File contentRootDir;             // ${tds.content.root.path}
-  private File threddsDirectory;           // ${tds.content.root.path}/thredds
-  private File publicContentDirectory;
-  private File startupContentDirectory;
-  private File tomcatLogDir;
-  private File uploadDir;
-  private File downloadDir;
+    private File servletRootDirectory;       // servletContext.getRealPath("/")
+    private File contentRootDir;             // ${tds.content.root.path}
+    private File threddsDirectory;           // ${tds.content.root.path}/thredds
+    private File publicContentDirectory;
+    private File startupContentDirectory;
+    private File tomcatLogDir;
+    private File uploadDir = null;
+    private File downloadDir = null;
 
-  private FileSource publicContentDirSource;
-  // private FileSource catalogRootDirSource;  // look for catalog files at this(ese) root(s)
+    private FileSource publicContentDirSource;
+    // private FileSource catalogRootDirSource;  // look for catalog files at this(ese) root(s)
 
-  private RequestDispatcher defaultRequestDispatcher;
+    private RequestDispatcher defaultRequestDispatcher;
 
-  //////////// called by Spring lifecycle management
-  @Override
-  public void setServletContext(ServletContext servletContext) {
-    this.servletContext = servletContext;
-  }
-
-  public ServletContext getServletContext() {
-    return servletContext;
-  }
-
-  @Override
-  public void destroy() {
-    logServerStartup.info("TdsContext: shutdownLogging()");
-    Log4jWebConfigurer.shutdownLogging(servletContext); // probably not needed anymore with log4j-web in classpath
-  }
-
-  @Override
-  public void afterPropertiesSet() {
-    if (servletContext == null)
-      throw new IllegalArgumentException("ServletContext must not be null.");
-
-    // Set the webapp name. display-name from web.xml
-    this.webappDisplayName = servletContext.getServletContextName();
-
-    // Set the context path, eg "thredds"
-    contextPath = servletContext.getContextPath();
-    InvDatasetFeatureCollection.setContextName(contextPath);
-
-    // Set the root directory and source.
-    String rootPath = servletContext.getRealPath("/");
-    if (rootPath == null) {
-      String msg = "Webapp [" + this.webappDisplayName + "] must run with exploded deployment directory (not from .war).";
-      logServerStartup.error("TdsContext.init(): " + msg);
-      throw new IllegalStateException(msg);
+    //////////// called by Spring lifecycle management
+    @Override
+    public void setServletContext(ServletContext servletContext)
+    {
+        this.servletContext = servletContext;
     }
-    this.servletRootDirectory = new File(rootPath);
 
-    // Set the startup (initial install) content directory and source.
-    this.startupContentDirectory = new File(this.servletRootDirectory, this.contentStartupPathProperty);
-    DescendantFileSource startupContentDirSource = new BasicDescendantFileSource(this.startupContentDirectory);
-    this.startupContentDirectory = startupContentDirSource.getRootDirectory();
+    public ServletContext getServletContext()
+    {
+        return servletContext;
+    }
 
-    // set the tomcat logging directory
-    try {
-      String base = System.getProperty("catalina.base");
-      if (base != null) {
-        this.tomcatLogDir = new File(base, "logs").getCanonicalFile();
-        if (!this.tomcatLogDir.exists()) {
-          String msg = "'catalina.base' directory not found: " + this.tomcatLogDir;
-          logServerStartup.error("TdsContext.init(): " + msg);
+    @Override
+    public void destroy()
+    {
+        logServerStartup.info("TdsContext: shutdownLogging()");
+        Log4jWebConfigurer.shutdownLogging(servletContext); // probably not needed anymore with log4j-web in classpath
+    }
+
+    @Override
+    public void afterPropertiesSet()
+    {
+        if(servletContext == null)
+            throw new IllegalArgumentException("ServletContext must not be null.");
+
+        // Set the webapp name. display-name from web.xml
+        this.webappDisplayName = servletContext.getServletContextName();
+
+        // Set the context path, eg "thredds"
+        contextPath = servletContext.getContextPath();
+        InvDatasetFeatureCollection.setContextName(contextPath);
+
+        // Set the root directory and source.
+        String rootPath = servletContext.getRealPath("/");
+        if(rootPath == null) {
+            String msg = "Webapp [" + this.webappDisplayName + "] must run with exploded deployment directory (not from .war).";
+            logServerStartup.error("TdsContext.init(): " + msg);
+            throw new IllegalStateException(msg);
         }
-      } else {
-        String msg = "'catalina.base' property not found - probably not a tomcat server";
-        logServerStartup.warn("TdsContext.init(): " + msg);
-      }
+        this.servletRootDirectory = new File(rootPath);
 
-    } catch (IOException e) {
-      String msg = "tomcatLogDir could not be created";
-      logServerStartup.error("TdsContext.init(): " + msg);
-    }
+        // Set the startup (initial install) content directory and source.
+        this.startupContentDirectory = new File(this.servletRootDirectory, this.contentStartupPathProperty);
+        DescendantFileSource startupContentDirSource = new BasicDescendantFileSource(this.startupContentDirectory);
+        this.startupContentDirectory = startupContentDirSource.getRootDirectory();
 
-    ////////////////////////////////
-    String contentRootPathKey = "tds.content.root.path";
+        // set the tomcat logging directory
+        try {
+            String base = System.getProperty("catalina.base");
+            if(base != null) {
+                this.tomcatLogDir = new File(base, "logs").getCanonicalFile();
+                if(!this.tomcatLogDir.exists()) {
+                    String msg = "'catalina.base' directory not found: " + this.tomcatLogDir;
+                    logServerStartup.error("TdsContext.init(): " + msg);
+                }
+            } else {
+                String msg = "'catalina.base' property not found - probably not a tomcat server";
+                logServerStartup.warn("TdsContext.init(): " + msg);
+            }
 
-    // In applicationContext-tdsConfig.xml, we have ignoreUnresolvablePlaceholders set to "true".
-    // As a result, when properties aren't defined, they will keep their placeholder String.
-    // In this case, that's "${tds.content.root.path}".
-    if (this.contentRootPathProperty.equals("${tds.content.root.path}")) {
-      String message = String.format("\"%s\" property isn't defined.", contentRootPathKey);
-      logServerStartup.error(message);
-      throw new IllegalStateException(message);
-    }
+        } catch (IOException e) {
+            String msg = "tomcatLogDir could not be created";
+            logServerStartup.error("TdsContext.init(): " + msg);
+        }
 
-    contentRootPathProperty = StringUtil2.replace(contentRootPathProperty, "\\", "/");
-    if (!contentRootPathProperty.endsWith("/"))
-      contentRootPathProperty += "/";
+        ////////////////////////////////
+        String contentRootPathKey = "tds.content.root.path";
 
-    // Set the content directory and source.
-    this.contentRootDir = new File(this.contentRootPathProperty);
-    if (!contentRootDir.isAbsolute())
-      this.threddsDirectory = new File(new File(this.servletRootDirectory, this.contentRootPathProperty), this.contentPathProperty);
-    else {
-      if (contentRootDir.isDirectory())
-        this.threddsDirectory = new File(contentRootDir, this.contentPathProperty);
-      else {
-        String msg = "Content root directory [" + this.contentRootPathProperty + "] not a directory.";
-        logServerStartup.error("TdsContext.init(): " + msg);
-        throw new IllegalStateException(msg);
-      }
-    }
+        // In applicationContext-tdsConfig.xml, we have ignoreUnresolvablePlaceholders set to "true".
+        // As a result, when properties aren't defined, they will keep their placeholder String.
+        // In this case, that's "${tds.content.root.path}".
+        if(this.contentRootPathProperty.equals("${tds.content.root.path}")) {
+            String message = String.format("\"%s\" property isn't defined.", contentRootPathKey);
+            logServerStartup.error(message);
+            throw new IllegalStateException(message);
+        }
 
-    // If content directory exists, make sure it is a directory.
-    DescendantFileSource contentDirSource;
-    if (this.threddsDirectory.isDirectory()) {
-      contentDirSource = new BasicDescendantFileSource(StringUtils.cleanPath(this.threddsDirectory.getAbsolutePath()));
-      this.threddsDirectory = contentDirSource.getRootDirectory();
-    } else {
-      String message = String.format(
-              "TdsContext.init(): Content directory is not a directory: %s", this.threddsDirectory.getAbsolutePath());
-      logServerStartup.error(message);
-      throw new IllegalStateException(message);
-    }
+        contentRootPathProperty = StringUtil2.replace(contentRootPathProperty, "\\", "/");
+        if(!contentRootPathProperty.endsWith("/"))
+            contentRootPathProperty += "/";
 
-    // public content
-    this.publicContentDirectory = new File(this.threddsDirectory, "public");
-    if (!publicContentDirectory.exists()) {
-      if (!publicContentDirectory.mkdirs()) {
-        String msg = "Couldn't create TDS public directory [" + publicContentDirectory.getPath() + "].";
-        logServerStartup.error("TdsContext.init(): " + msg);
-        throw new IllegalStateException(msg);
-      }
-    }
-    this.publicContentDirSource = new BasicDescendantFileSource(this.publicContentDirectory);
+        // Set the content directory and source.
+        this.contentRootDir = new File(this.contentRootPathProperty);
+        if(!contentRootDir.isAbsolute())
+            this.threddsDirectory = new File(new File(this.servletRootDirectory, this.contentRootPathProperty), this.contentPathProperty);
+        else {
+            if(contentRootDir.isDirectory())
+                this.threddsDirectory = new File(contentRootDir, this.contentPathProperty);
+            else {
+                String msg = "Content root directory [" + this.contentRootPathProperty + "] not a directory.";
+                logServerStartup.error("TdsContext.init(): " + msg);
+                throw new IllegalStateException(msg);
+            }
+        }
+
+        // If content directory exists, make sure it is a directory.
+        DescendantFileSource contentDirSource;
+        if(this.threddsDirectory.isDirectory()) {
+            contentDirSource = new BasicDescendantFileSource(StringUtils.cleanPath(this.threddsDirectory.getAbsolutePath()));
+            this.threddsDirectory = contentDirSource.getRootDirectory();
+        } else {
+            String message = String.format(
+                    "TdsContext.init(): Content directory is not a directory: %s", this.threddsDirectory.getAbsolutePath());
+            logServerStartup.error(message);
+            throw new IllegalStateException(message);
+        }
+
+        // public content
+        this.publicContentDirectory = new File(this.threddsDirectory, "public");
+        if(!publicContentDirectory.exists()) {
+            if(!publicContentDirectory.mkdirs()) {
+                String msg = "Couldn't create TDS public directory [" + publicContentDirectory.getPath() + "].";
+                logServerStartup.error("TdsContext.init(): " + msg);
+                throw new IllegalStateException(msg);
+            }
+        }
+        this.publicContentDirSource = new BasicDescendantFileSource(this.publicContentDirectory);
 
     /* places to look for catalogs ??
     List<DescendantFileSource> chain = new ArrayList<>();
@@ -215,291 +223,287 @@ public final class TdsContext implements ServletContextAware, InitializingBean, 
     chain.add(contentMinusPublicSource);
     this.catalogRootDirSource = new ChainedFileSource(chain); */
 
-    //jspRequestDispatcher = servletContext.getNamedDispatcher("jsp");
-    defaultRequestDispatcher = servletContext.getNamedDispatcher("default");
+        //jspRequestDispatcher = servletContext.getNamedDispatcher("jsp");
+        defaultRequestDispatcher = servletContext.getNamedDispatcher("default");
 
-    ////////////////////////////////
+        ////////////////////////////////
 
-    String uploadDirKey = "tds.upload.dir";
-    this.uploadDir = null;
+        this.uploadDir = getPropertyDir(uploadDirProperty, "tds.upload.dir", false);
+        this.downloadDir = getPropertyDir(downloadDirProperty, "tds.download.dir", true);
 
-    // In applicationContext-tdsConfig.xml, we have ignoreUnresolvablePlaceholders set to "true".
-    // As a result, when properties aren't defined, they will keep their placeholder String.
-    // In this case, that's "${tds.upload.dir}".
-    if (this.uploadDirProperty.equals("${tds.upload.dir}")) {
-      String msg = String.format("\"%s\" property isn't defined.", uploadDirKey);
-      logServerStartup.warn("TdsContext.init(): " + msg);
-    } else {
-      uploadDirProperty = StringUtil2.replace(uploadDirProperty, "\\", "/");
-      if (!uploadDirProperty.endsWith("/"))
-	    uploadDirProperty += "/";
-      // Set the content directory and source.
-      File updir = new File(this.uploadDirProperty);
-      if (!updir.isAbsolute()) {
-        String msg = String.format("\"%s=%s\" value must be an absolutepath.", uploadDirKey,this.uploadDirProperty);
-        logServerStartup.warn("TdsContext.init(): " + msg);
-      } else {
-        // Make sure upload dir exists and is read/writeable
-        if(!updir.exists() && !updir.mkdirs()) {
-            logServerStartup.warn("TdsContext.init(): " +
-              String.format("Upload directory: %s=%s does not exist and cannot create.",
-                    uploadDirKey,uploadDirProperty));
-        } else if(!updir.isDirectory())  {
-          logServerStartup.warn("TdsContext.init(): " +
-                  String.format("Upload directory: %s=%s is not a directory.",
-                            uploadDirKey,uploadDirProperty));
-        } else if(!updir.canRead() || !updir.canWrite()) {
-          logServerStartup.warn("TdsContext.init(): " +
-                           String.format("Upload directory: %s=%s must be readable and writeable.",
-                                     uploadDirKey,uploadDirProperty));
-        } else
-          this.uploadDir = updir;
-      }
+        ////////////////////////////////
+        // Copy default startup files, if necessary
+        ////////////////////////////////
+
+        try {
+            File catalogFile = new File(threddsDirectory, "catalog.xml");
+            if(!catalogFile.exists()) {
+                File defaultCatalogFile = new File(startupContentDirectory, "catalog.xml");
+                logServerStartup.info("TdsContext.init(): Copying default catalog file from {}.", defaultCatalogFile);
+                IO.copyFile(defaultCatalogFile, catalogFile);
+
+                File enhancedCatalogFile = new File(threddsDirectory, "enhancedCatalog.xml");
+                File defaultEnhancedCatalogFile = new File(startupContentDirectory, "enhancedCatalog.xml");
+                logServerStartup.info("TdsContext.init(): Copying default enhanced catalog file from {}.", defaultEnhancedCatalogFile);
+                IO.copyFile(defaultEnhancedCatalogFile, enhancedCatalogFile);
+
+                File dataDir = new File(new File(threddsDirectory, "public"), "testdata");
+                File defaultDataDir = new File(new File(startupContentDirectory, "public"), "testdata");
+                logServerStartup.info("TdsContext.init(): Copying default testdata directory from {}.", defaultDataDir);
+                IO.copyDirTree(defaultDataDir.getCanonicalPath(), dataDir.getCanonicalPath());
+            }
+
+            File threddsConfigFile = new File(threddsDirectory, "threddsConfig.xml");
+            if(!threddsConfigFile.exists()) {
+                File defaultThreddsConfigFile = new File(startupContentDirectory, "threddsConfig.xml");
+                logServerStartup.info("TdsContext.init(): Copying default THREDDS config file from {}.", defaultThreddsConfigFile);
+                IO.copyFile(defaultThreddsConfigFile, threddsConfigFile);
+            }
+
+            File wmsConfigXmlFile = new File(threddsDirectory, "wmsConfig.xml");
+            if(!wmsConfigXmlFile.exists()) {
+                File defaultWmsConfigXmlFile = new File(startupContentDirectory, "wmsConfig.xml");
+                logServerStartup.info("TdsContext.init(): Copying default WMS config file from {}.", defaultWmsConfigXmlFile);
+                IO.copyFile(defaultWmsConfigXmlFile, wmsConfigXmlFile);
+
+                File wmsConfigDtdFile = new File(threddsDirectory, "wmsConfig.dtd");
+                File defaultWmsConfigDtdFile = new File(startupContentDirectory, "wmsConfig.dtd");
+                logServerStartup.info("TdsContext.init(): Copying default WMS config DTD from {}.", defaultWmsConfigDtdFile);
+                IO.copyFile(defaultWmsConfigDtdFile, wmsConfigDtdFile);
+            }
+        } catch (IOException e) {
+            String message = String.format("Could not copy default startup files to %s.", threddsDirectory);
+            logServerStartup.error("TdsContext.init(): " + message);
+            throw new IllegalStateException(message, e);
+        }
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // logging
+
+        File logDir = new File(this.threddsDirectory, "logs");
+        if(!logDir.exists()) {
+            if(!logDir.mkdirs()) {
+                String msg = "Couldn't create TDS log directory [" + logDir.getPath() + "].";
+                logServerStartup.error("TdsContext.init(): " + msg);
+                throw new IllegalStateException(msg);
+            }
+        }
+        String loggingDirectory = StringUtil2.substitute(logDir.getPath(), "\\", "/");
+        System.setProperty("tds.log.dir", loggingDirectory); // variable substitution
+
+        // LOOK Remove log4j init JC 6/13/2012
+        // which is used in log4j.xml file loaded here.
+        // LOOK Remove Log4jWebConfigurer,initLogging - depends on log4g v1, we are using v2 JC 9/2/2013
+        // Log4jWebConfigurer.initLogging( servletContext );
+        logServerStartup.info("TdsContext version= " + getVersionInfo());
+        logServerStartup.info("TdsContext intialized logging in " + logDir.getPath());
     }
 
-
-    String downloadDirKey = "tds.download.dir";
-    this.downloadDir = null;
-
-    // In applicationContext-tdsConfig.xml, we have ignoreUnresolvablePlaceholders set to "true".
-    // As a result, when properties aren't defined, they will keep their placeholder String.
-    // In this case, that's "${tds.download.dir}".
-    if (this.downloadDirProperty.equals("${tds.download.dir}")) {
-      String msg = String.format("\"%s\" property isn't defined.", downloadDirKey);
-      logServerStartup.warn("TdsContext.init(): " + msg);
-    } else {
-      downloadDirProperty = StringUtil2.replace(downloadDirProperty, "\\", "/");
-      if (!downloadDirProperty.endsWith("/"))
-	    downloadDirProperty += "/";
-      // Set the content directory and source.
-      File downdir = new File(this.downloadDirProperty);
-      if (!downdir.isAbsolute()) {
-        String msg = String.format("\"%s=%s\" value must be an absolutepath.", downloadDirKey,this.downloadDirProperty);
-        logServerStartup.warn("TdsContext.init(): " + msg);
-      } else {
-        // Make sure download dir exists and is read/writeable
-        if(!downdir.exists()) {
-            logServerStartup.warn("TdsContext.init(): " +
-              String.format("Download directory: %s=%s does not exist.",
-                    downloadDirKey,downloadDirProperty));
-        } else if(!downdir.isDirectory())  {
-          logServerStartup.warn("TdsContext.init(): " +
-                  String.format("Download directory: %s=%s is not a directory.",
-                            downloadDirKey,downloadDirProperty));
-        } else if(!downdir.canRead() || !downdir.canWrite()) {
-          logServerStartup.warn("TdsContext.init(): " +
-                           String.format("Download directory: %s=%s must be readable and writeable.",
-                                     downloadDirKey,downloadDirProperty));
-        } else
-          this.downloadDir = downdir;
-      }
+    @Override
+    public String toString()
+    {
+        final StringBuilder sb = new StringBuilder("TdsContext{");
+        sb.append("\n  contextPath='").append(contextPath).append('\'');
+        sb.append("\n  webappName='").append(webappDisplayName).append('\'');
+        sb.append("\n  webappVersion='").append(tdsVersion).append('\'');
+        sb.append("\n  webappVersionBuildDate='").append(tdsVersionBuildDate).append('\'');
+        sb.append("\n");
+        sb.append("\n  contentPath= '").append(contentPathProperty).append('\'');
+        sb.append("\n  contentRootPath= '").append(contentRootPathProperty).append('\'');
+        sb.append("\n  contentStartupPath= '").append(contentStartupPathProperty).append('\'');
+        sb.append("\n  configFile= '").append(configFileProperty).append('\'');
+        sb.append("\n");
+        sb.append("\n  servletRootDir=   ").append(servletRootDirectory);
+        sb.append("\n  contentRootDir=   ").append(contentRootDir);
+        if(this.uploadDir != null)
+            sb.append("\n  uploadDir=   ").append(uploadDir);
+        if(this.downloadDir != null)
+            sb.append("\n  downloadDir=   ").append(downloadDir);
+        sb.append("\n  threddsDirectory= ").append(threddsDirectory);
+        sb.append("\n  publicContentDir= ").append(publicContentDirectory);
+        sb.append("\n  startupContentDir=").append(startupContentDirectory);
+        sb.append("\n  tomcatLogDir=     ").append(tomcatLogDir);
+        sb.append("\n");
+        sb.append("\n  publicContentDirSource= ").append(publicContentDirSource);
+        // sb.append("\n  catalogRootDirSource=").append(catalogRootDirSource);
+        sb.append('}');
+        return sb.toString();
     }
 
-    //////////////////////////////////// Copy default startup files, if necessary ////////////////////////////////////
+    ////////////////////////////////////////////////////
+    // public getters
 
-    try {
-      File catalogFile = new File(threddsDirectory, "catalog.xml");
-      if (!catalogFile.exists()) {
-        File defaultCatalogFile = new File(startupContentDirectory, "catalog.xml");
-        logServerStartup.info("TdsContext.init(): Copying default catalog file from {}.", defaultCatalogFile);
-        IO.copyFile(defaultCatalogFile, catalogFile);
-
-        File enhancedCatalogFile = new File(threddsDirectory, "enhancedCatalog.xml");
-        File defaultEnhancedCatalogFile = new File(startupContentDirectory, "enhancedCatalog.xml");
-        logServerStartup.info("TdsContext.init(): Copying default enhanced catalog file from {}.", defaultEnhancedCatalogFile);
-        IO.copyFile(defaultEnhancedCatalogFile, enhancedCatalogFile);
-
-        File dataDir = new File(new File(threddsDirectory, "public"), "testdata");
-        File defaultDataDir = new File(new File(startupContentDirectory, "public"), "testdata");
-        logServerStartup.info("TdsContext.init(): Copying default testdata directory from {}.", defaultDataDir);
-        IO.copyDirTree(defaultDataDir.getCanonicalPath(), dataDir.getCanonicalPath());
-      }
-
-      File threddsConfigFile = new File(threddsDirectory, "threddsConfig.xml");
-      if (!threddsConfigFile.exists()) {
-        File defaultThreddsConfigFile = new File(startupContentDirectory, "threddsConfig.xml");
-        logServerStartup.info("TdsContext.init(): Copying default THREDDS config file from {}.", defaultThreddsConfigFile);
-        IO.copyFile(defaultThreddsConfigFile, threddsConfigFile);
-      }
-
-      File wmsConfigXmlFile = new File(threddsDirectory, "wmsConfig.xml");
-      if (!wmsConfigXmlFile.exists()) {
-        File defaultWmsConfigXmlFile = new File(startupContentDirectory, "wmsConfig.xml");
-        logServerStartup.info("TdsContext.init(): Copying default WMS config file from {}.", defaultWmsConfigXmlFile);
-        IO.copyFile(defaultWmsConfigXmlFile, wmsConfigXmlFile);
-
-        File wmsConfigDtdFile = new File(threddsDirectory, "wmsConfig.dtd");
-        File defaultWmsConfigDtdFile = new File(startupContentDirectory, "wmsConfig.dtd");
-        logServerStartup.info("TdsContext.init(): Copying default WMS config DTD from {}.", defaultWmsConfigDtdFile);
-        IO.copyFile(defaultWmsConfigDtdFile, wmsConfigDtdFile);
-      }
-    } catch (IOException e) {
-      String message = String.format("Could not copy default startup files to %s.", threddsDirectory);
-      logServerStartup.error("TdsContext.init(): " + message);
-      throw new IllegalStateException(message, e);
+    /**
+     * Return the context path under which this web app is running (e.g., "/thredds").
+     *
+     * @return the context path.
+     */
+    public String getContextPath()
+    {
+        return contextPath;
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // logging
-
-    File logDir = new File(this.threddsDirectory, "logs");
-    if (!logDir.exists()) {
-      if (!logDir.mkdirs()) {
-        String msg = "Couldn't create TDS log directory [" + logDir.getPath() + "].";
-        logServerStartup.error("TdsContext.init(): " + msg);
-        throw new IllegalStateException(msg);
-      }
+    /**
+     * Return the full version string (<major>.<minor>.<bug>.<build>)*
+     *
+     * @return the full version string.
+     */
+    public String getWebappVersion()
+    {
+        return this.tdsVersion;
     }
-    String loggingDirectory = StringUtil2.substitute(logDir.getPath(), "\\", "/");
-    System.setProperty("tds.log.dir", loggingDirectory); // variable substitution
 
-    // LOOK Remove log4j init JC 6/13/2012
-    // which is used in log4j.xml file loaded here.
-    // LOOK Remove Log4jWebConfigurer,initLogging - depends on log4g v1, we are using v2 JC 9/2/2013
-    // Log4jWebConfigurer.initLogging( servletContext );
-    logServerStartup.info("TdsContext version= " + getVersionInfo());
-    logServerStartup.info("TdsContext intialized logging in " + logDir.getPath());
-  }
-
-  @Override
-  public String toString() {
-    final StringBuilder sb = new StringBuilder("TdsContext{");
-    sb.append("\n  contextPath='").append(contextPath).append('\'');
-    sb.append("\n  webappName='").append(webappDisplayName).append('\'');
-    sb.append("\n  webappVersion='").append(tdsVersion).append('\'');
-    sb.append("\n  webappVersionBuildDate='").append(tdsVersionBuildDate).append('\'');
-    sb.append("\n");
-    sb.append("\n  contentPath= '").append(contentPathProperty).append('\'');
-    sb.append("\n  contentRootPath= '").append(contentRootPathProperty).append('\'');
-    sb.append("\n  contentStartupPath= '").append(contentStartupPathProperty).append('\'');
-    sb.append("\n  configFile= '").append(configFileProperty).append('\'');
-    sb.append("\n");
-    sb.append("\n  servletRootDir=   ").append(servletRootDirectory);
-    sb.append("\n  contentRootDir=   ").append(contentRootDir);
-    if(this.uploadDir != null)
-      sb.append("\n  uploadDir=   ").append(uploadDir);
-    if(this.downloadDir != null)
-      sb.append("\n  downloadDir=   ").append(downloadDir);
-    sb.append("\n  threddsDirectory= ").append(threddsDirectory);
-    sb.append("\n  publicContentDir= ").append(publicContentDirectory);
-    sb.append("\n  startupContentDir=").append(startupContentDirectory);
-    sb.append("\n  tomcatLogDir=     ").append(tomcatLogDir);
-    sb.append("\n");
-    sb.append("\n  publicContentDirSource= ").append(publicContentDirSource);
-    // sb.append("\n  catalogRootDirSource=").append(catalogRootDirSource);
-    sb.append('}');
-    return sb.toString();
-  }
-
-  ////////////////////////////////////////////////////
-  // public getters
-
-  /**
-   * Return the context path under which this web app is running (e.g., "/thredds").
-   *
-   * @return the context path.
-   */
-  public String getContextPath() {
-    return contextPath;
-  }
-
-  /**
-   * Return the full version string (<major>.<minor>.<bug>.<build>)*
-   * @return the full version string.
-   */
-  public String getWebappVersion() {
-    return this.tdsVersion;
-  }
-
-  public String getTdsVersionBuildDate() {
-    return this.tdsVersionBuildDate;
-  }
-
-  public String getVersionInfo() {
-    Formatter f = new Formatter();
-    f.format("%s", getWebappVersion());
-    if (getTdsVersionBuildDate() != null) {
-      f.format(" - %s", getTdsVersionBuildDate());
+    public String getTdsVersionBuildDate()
+    {
+        return this.tdsVersionBuildDate;
     }
-    return f.toString();
-  }
 
-  /**
-   * @return the name of the webapp as given by the display-name element in web.xml.
-   */
-  public String getWebappDisplayName() {
-    return this.webappDisplayName;
-  }
+    public String getVersionInfo()
+    {
+        Formatter f = new Formatter();
+        f.format("%s", getWebappVersion());
+        if(getTdsVersionBuildDate() != null) {
+            f.format(" - %s", getTdsVersionBuildDate());
+        }
+        return f.toString();
+    }
 
-  /**
-   * Return the web apps root directory (i.e., getRealPath( "/")).
-   * Typically {tomcat}/webapps/thredds
-   * @return the root directory for the web app.
-   */
-  public File getServletRootDirectory() {
-    return servletRootDirectory;
-  }
+    /**
+     * @return the name of the webapp as given by the display-name element in web.xml.
+     */
+    public String getWebappDisplayName()
+    {
+        return this.webappDisplayName;
+    }
 
-  public File getTomcatLogDirectory() {
-    return tomcatLogDir;
-  }
+    /**
+     * Return the web apps root directory (i.e., getRealPath( "/")).
+     * Typically {tomcat}/webapps/thredds
+     *
+     * @return the root directory for the web app.
+     */
+    public File getServletRootDirectory()
+    {
+        return servletRootDirectory;
+    }
 
-  /**
-   * Return File for content directory (exists() may be false).
-   *
-   * @return a File to the content directory.
-   */
-  public File getThreddsDirectory() {
-    return threddsDirectory;
-  }
+    public File getTomcatLogDirectory()
+    {
+        return tomcatLogDir;
+    }
 
-  public File getContentRootDir() {
-    return contentRootDir;
-  }
+    /**
+     * Return File for content directory (exists() may be false).
+     *
+     * @return a File to the content directory.
+     */
+    public File getThreddsDirectory()
+    {
+        return threddsDirectory;
+    }
+
+    public File getContentRootDir()
+    {
+        return contentRootDir;
+    }
 
   /* public FileSource getCatalogRootDirSource() {
     return this.catalogRootDirSource;
   }  */
 
-  // {tomcat}/content/thredds/public
-  public FileSource getPublicContentDirSource() {
-    return this.publicContentDirSource;
-  }
+    // {tomcat}/content/thredds/public
+    public FileSource getPublicContentDirSource()
+    {
+        return this.publicContentDirSource;
+    }
 
-  public RequestDispatcher getDefaultRequestDispatcher() {
-    return this.defaultRequestDispatcher;
-  }
+    public RequestDispatcher getDefaultRequestDispatcher()
+    {
+        return this.defaultRequestDispatcher;
+    }
 
-  public String getContentRootPathProperty() {
-    return this.contentRootPathProperty;
-  }
+    public String getContentRootPathProperty()
+    {
+        return this.contentRootPathProperty;
+    }
 
-  public String getConfigFileProperty() {
-    return this.configFileProperty;
-  }
+    public String getConfigFileProperty()
+    {
+        return this.configFileProperty;
+    }
 
-  public File getUploadDir() {
-    return uploadDir;
-  }
+    public File getUploadDir()
+    {
+        return uploadDir;
+    }
 
-  public File getDownloadDir() {
-    return downloadDir;
-  }
+    public File getDownloadDir()
+    {
+        return downloadDir;
+    }
 
-  /////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////
 
-  // used by MockTdsContextLoader
+    // used by MockTdsContextLoader
 
-  public void setContentRootPathProperty(String contentRootPathProperty) {
-    this.contentRootPathProperty = contentRootPathProperty;
-  }
+    public void setContentRootPathProperty(String contentRootPathProperty)
+    {
+        this.contentRootPathProperty = contentRootPathProperty;
+    }
 
-  public void setUploadDirProperty(String uploadDirProperty) {
-    this.uploadDirProperty = uploadDirProperty;
-  }
+    public void setUploadDirProperty(String uploadDirProperty)
+    {
+        this.uploadDirProperty = uploadDirProperty;
+    }
 
-  public void setDownloadDirProperty(String downloadDirProperty) {
-    this.downloadDirProperty = downloadDirProperty;
-  }
+    public void setDownloadDirProperty(String downloadDirProperty)
+    {
+        this.downloadDirProperty = downloadDirProperty;
+    }
 
+    public File
+    getPropertyDir(String prop, String key, boolean create)
+    {
+        assert prop != null && key != null;
+        // In applicationContext-tdsConfig.xml, we have ignoreUnresolvablePlaceholders set to "true".
+        // As a result, when properties aren't defined, they will keep their placeholder String.
+        // In this case, that's "${<key>}".
+        if(prop.equals("${" + key + "}")) {
+            String msg = String.format("\"%s\" property isn't defined.", key);
+            logServerStartup.warn("TdsContext.init(): " + msg);
+            return null;
+        }
+        prop = StringUtil2.replace(prop, "\\", "/");
+        if(!prop.endsWith("/"))
+            prop += "/";
+        // Set the content directory and source.
+        File dir = new File(prop);
+        if(!dir.isAbsolute()) {
+            String msg = String.format("\"%s=%s\" value must be an absolutepath.", key, prop);
+            logServerStartup.warn("TdsContext.init(): " + msg);
+            return null;
+        }
+        // Make sure dir exists and is read/writeable
+        if(!dir.exists() && create) {
+            if(!dir.mkdirs())
+                logServerStartup.warn("TdsContext.init(): " +
+                                String.format("Directory: %s=%s could not be created.", key, prop));;
+        }
+        if(!dir.exists()) {
+            logServerStartup.warn("TdsContext.init(): " +
+                    String.format("Directory: %s=%s does not exist.", key, prop));
+            return null;
+        }
+        if(!dir.isDirectory()) {
+            logServerStartup.warn("TdsContext.init(): " +
+                    String.format("Directory: %s=%s is not a directory.", key, prop));
+            return null;
+        }
+        if(!dir.canRead() || !dir.canWrite()) {
+            logServerStartup.warn("TdsContext.init(): " +
+                    String.format("Directory: %s=%s must be readable and writeable.", key, prop));
+            return null;
+        }
+        return dir;
+    }
 }

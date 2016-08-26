@@ -7,13 +7,11 @@ package thredds.server.reify;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import ucar.httpservices.HTTPUtil;
-import ucar.unidata.util.test.category.NotJenkins;
-import ucar.unidata.util.test.category.NotTravis;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.attribute.UserPrincipal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -80,7 +78,9 @@ public class TestDownload extends TestReify
     //////////////////////////////////////////////////
     // Instance variables
 
+    protected Map<String,String> serverprops = null;
     protected String serverdir = null;
+    protected String serveruser = null;
 
     //////////////////////////////////////////////////
     // Junit test methods
@@ -89,10 +89,19 @@ public class TestDownload extends TestReify
     public void setup()
             throws Exception
     {
-        this.serverdir = getDefaultDownloadDir(DEFAULTREIFYURL);
-        // clear out the download dir
-        if(this.serverdir != null)
-            deleteTree(this.serverdir,false);
+        this.serverprops = getServerProperties(DEFAULTREIFYURL);
+        this.serverdir = this.serverprops.get("downloaddir");
+        this.serveruser = this.serverprops.get("username");
+        if(this.serverdir != null) {
+            File dir = new File(this.serverdir);
+            UserPrincipal owner = Files.getOwner(dir.toPath());
+            // Change permissions to allow read/write by anyone
+            dir.setExecutable(true, false);
+            dir.setReadable(true, false);
+            dir.setWritable(true, false);
+            // clear out the download dir
+            deleteTree(this.serverdir, false);
+        }
         TestCase.setServerDir(this.serverdir);
         //NetcdfFile.registerIOProvider(Nc4Iosp.class);
         defineAllTestCases();

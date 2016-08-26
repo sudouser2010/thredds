@@ -197,6 +197,7 @@ class ReifyUtils
             b.append(entry.getKey());
             b.append("=");
             b.append(encode ? urlEncode(entry.getValue()) : entry.getValue());
+            first = false;
         }
         return b.toString();
     }
@@ -207,16 +208,17 @@ class ReifyUtils
         Map<String, String> map = new HashMap<>();
         if(params == null || params.length() == 0)
             return map;
-        String regex = "[ ]*[" + sep + "][ ]*";
-        String[] pieces = params.split(regex);
-        for(String piece : pieces) {
-            String[] pair = piece.split("[ ]*[=][ ]*");
+        String[] pieces = params.split("[&]");
+        for(int i = 0; i < pieces.length; i++) {
+            String piece = pieces[i].trim();
+            String[] pair = piece.split("[=]");
+            String key = pair[0].trim();
             if(pair.length >= 2) {
-                String v = pair[1];
+                String v = pair[1].trim();
                 if(decode) v = urlDecode(v);
-                map.put(pair[0], v);
+                map.put(key, v);
             } else if(pair.length == 1) {
-                map.put(pair[0], "");
+                map.put(key, "");
             } else
                 assert false : "split() failed";
         }
@@ -268,7 +270,9 @@ class ReifyUtils
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
         pw.close();
-        try {sw.close();} catch (IOException ioe) {
+        try {
+            sw.close();
+        } catch (IOException ioe) {
             return "close failure";
         }
         return sw.toString();

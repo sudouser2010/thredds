@@ -130,13 +130,13 @@ abstract public class TestReify extends UnitTestCommon
     //////////////////////////////////////////////////
     // Utilities
 
-    public String
-    getDefaultDownloadDir(String server)
+    public Map<String,String>
+    getServerProperties(String server)
     {
         StringBuilder b = new StringBuilder();
         b.append(server);
         b.append("/");
-        b.append("?request=inquire&inquire=downloaddir");
+        b.append("?request=inquire&inquire=downloaddir;username");
         int[] codep = new int[1];
         String sresult = null;
         try {
@@ -150,8 +150,7 @@ abstract public class TestReify extends UnitTestCommon
             return null;
         }
         Map<String, String> result = ReifyUtils.parseMap(sresult, ';', true);
-        String dld = HTTPUtil.canonicalpath(result.get("downloaddir"));
-        return dld;
+        return result;
     }
 
     public String

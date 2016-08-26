@@ -429,6 +429,9 @@ public class ReifyController
         for(String key : keys) {
             if(key.equalsIgnoreCase("downloaddir")) {
                 result.put("downloaddir", downloaddir == null ? "null" : downloaddir);
+            } else if(key.equalsIgnoreCase("username")) {
+                String uname = System.getProperty("user.name");
+                result.put("username", uname == null ? "null" : uname);
             }
         }
     }
