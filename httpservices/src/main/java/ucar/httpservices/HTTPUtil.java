@@ -476,6 +476,8 @@ abstract public class HTTPUtil
     static protected void
     canonicalpath(StringBuilder s)
     {
+        if(s == null || s.length() == 0)
+            return;
         int index = 0;
         // "\\" -> "/"
         for(; ; ) {
