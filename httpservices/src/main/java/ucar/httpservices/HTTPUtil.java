@@ -438,18 +438,19 @@ abstract public class HTTPUtil
         if(suffix == null) suffix = "";
         prefix = HTTPUtil.canonicalpath(prefix);
         suffix = HTTPUtil.canonicalpath(suffix);
-        StringBuilder result = new StringBuilder(prefix);
+        StringBuilder result = new StringBuilder();
+        result.append(prefix);
         int prelen = prefix.length();
-        if(result.charAt(prelen - 1) != '/') {
+        if(prelen > 0 && result.charAt(prelen - 1) != '/') {
             result.append('/');
             prelen++;
         }
-        if(suffix.charAt(0) == '/')
+        if(suffix.length() > 0 && suffix.charAt(0) == '/')
             result.append(suffix.substring(1));
         else
             result.append(suffix);
         int len = result.length();
-        if(result.charAt(len - 1) == '/') {
+        if(len > 0 && result.charAt(len - 1) == '/') {
             result.deleteCharAt(len - 1);
             len--;
         }

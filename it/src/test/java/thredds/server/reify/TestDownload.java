@@ -55,6 +55,7 @@ public class TestDownload extends TestReify
             // Compute expected reply
             String replytarget = this.target;
             replytarget = HTTPUtil.canonjoin(svcdir, replytarget);
+            if(replytarget == null) replytarget = "";
             Map<String, String> map = new HashMap<String, String>();
             map.put("download", replytarget);
             return map;
@@ -95,6 +96,7 @@ public class TestDownload extends TestReify
         TestCase.setServerDir(this.serverdir);
         //NetcdfFile.registerIOProvider(Nc4Iosp.class);
         defineAllTestCases();
+        prop_visual = true;
     }
 
     @Test
