@@ -32,6 +32,26 @@ class ReifyUtils
         }
     }
 
+    static /*package*/ enum Inquiry
+    {
+	DOWNLOADDIR("downloaddir"),
+	USERNAME("username");
+
+	private String key;
+	private Inquiry(String key) {this.key = key;}
+
+	public String getKey() {return this.key;}
+
+        static public Inquiry parse(String key)
+        {
+            if(key == null) return null;
+            for(Inquiry x : Inquiry.values()) {
+                if(key.equalsIgnoreCase(x.toString())) return x;
+            }
+            return null;
+        }
+    }
+
     static /*package*/ enum FileFormat
     {
         NETCDF3("nc3"),

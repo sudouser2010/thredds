@@ -64,11 +64,17 @@ The set of defined values for the __request__ key are as follows.
 
 ==== Request Keys Specific to "request=inquire"
 
-* __inquire__ -- This specifies a semi-colon separated list of keys whose value is desired. Currently, the only defined key is __downloaddir__, which returns the absolute path of the download directory. All downloaded files will be placed under this directory.
+* __inquire__ -- This specifies a semi-colon separated list of keys whose value is desired. The set of keys will increase over time. See the class __Inquiry__
+in the file __ReifyUtils.java__ to see the definitive set. 
+Currently, two keys are defined:
+
+* __downloaddir__
+* __username__ 
 
 ==== Reply Keys Specific to "request=inquire"
 
 * __downloaddir__ -- The absolute path of the directory under which all downloaded files are placed.
+* __username__ -- The user name under which the download servlet is running; this is primarily for testing.
 
 == Upload Service Protocol
 
@@ -78,7 +84,7 @@ File upload is not handled directly by calling the Thredds server. Rather, it is
 
 In order to activate upload and/or download, one or both of the following Java -D flags must be provided to the Thredds server.
 
-* __-Dtds.download.dir__ -- Specify the absolute path of a directory into which files will be downloaded.
+* __-Dtds.download.dir__ -- Specify the absolute path of a directory into which files will be downloaded; if this does not exist, it will be created.
 * __-Dtds.upload.dir__ -- Specify the absolute path of a directory into which files may be uploaded.
 
 Security concerns (see below) must be addressed when setting the permission on these directories.

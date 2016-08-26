@@ -26,15 +26,15 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -371,7 +371,7 @@ public class ReifyController
         if(!path.startsWith("/" + this.threddsname))
             throw new SendError(HttpServletResponse.SC_FORBIDDEN,
                     String.format("URL does not reference %s: %s",
-                            this.threddsname,path));
+                            this.threddsname, path));
 
         // Rebuild the url to keep it under our control
         b.setLength(0); // reuse
@@ -388,10 +388,10 @@ public class ReifyController
             String truepath = directAccess(path, this.req, this.res);
             directcopy = canCopy(truepath, this.params.format);
             if(directcopy) try {
-                    Path src = new File(truepath).toPath();
-                    Path dst = new File(fulltarget).toPath();
-                    Files.deleteIfExists(dst);
-                    Files.copy(src, dst);
+                Path src = new File(truepath).toPath();
+                Path dst = new File(fulltarget).toPath();
+                Files.deleteIfExists(dst);
+                Files.copy(src, dst);
             } catch (IOException e) {
                 throw new SendError(HttpServletResponse.SC_FORBIDDEN, truepath);
             }
@@ -427,11 +427,17 @@ public class ReifyController
         String s = this.params.inquire;
         List<String> keys = ReifyUtils.parseList(s, ';', true);
         for(String key : keys) {
-            if(key.equalsIgnoreCase("downloaddir")) {
-                result.put("downloaddir", downloaddir == null ? "null" : downloaddir);
-            } else if(key.equalsIgnoreCase("username")) {
+            ReifyUtils.Inquiry inq = ReifyUtils.Inquiry.parse(key);
+            if(inq == null) continue; // ignore unknown keys
+            switch (inq) {
+            case DOWNLOADDIR:
+                result.put(inq.getKey(), downloaddir == null ? "null" : downloaddir);
+                break;
+            case USERNAME:
                 String uname = System.getProperty("user.name");
-                result.put("username", uname == null ? "null" : uname);
+                result.put(inq.getKey(), uname == null ? "null" : uname);
+            default: //ignore
+                break;
             }
         }
     }
