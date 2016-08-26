@@ -62,7 +62,6 @@ public class TestDataFactory {
     String server = TestWithLocalServer.server;
     return Arrays.asList(new Object[][]{
             /// GRIB feature collections
-            /*
             {"thredds:"+server+"catalog/grib.v5/NDFD/CONUS_5km/catalog.xml#grib.v5/NDFD/CONUS_5km/TwoD", FeatureType.FMRC, ServiceType.CdmrFeature},
             {"thredds:"+server+"catalog/gribCollection.v5/GFS_CONUS_80km/catalog.xml#gribCollection.v5/GFS_CONUS_80km/TwoD", FeatureType.FMRC, ServiceType.CdmrFeature},
             {"thredds:"+server+"catalog/gribCollection.v5/GFS_CONUS_80km/catalog.xml#gribCollection.v5/GFS_CONUS_80km/Best", FeatureType.GRID, ServiceType.CdmrFeature},
@@ -84,7 +83,6 @@ public class TestDataFactory {
             // LOOK not ready yet
             // {"thredds:"+server+"catalog/testStationFeatureCollection/catalog.xml#testStationFeatureCollection/Metar_Station_Data_fc.cdmr", FeatureType.STATION, ServiceType.CdmrFeature},
             {"thredds:resolve:"+server+"catalog/testStationFeatureCollection/files/latest.xml", FeatureType.STATION, ServiceType.CdmRemote},
-            */
             {"thredds:"+server+"catalog/testStationFeatureCollection/files/catalog.xml#testStationFeatureCollection/files/Surface_METAR_20060328_0000.nc", FeatureType.STATION, ServiceType.CdmRemote},
     });
   }
