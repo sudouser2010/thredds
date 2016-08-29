@@ -12,8 +12,6 @@ jdk:
   - oraclejdk8
 
 env:
-  global:
-    - LD_LIBRARY_PATH=${TRAVIS_BUILD_DIR}/travis/lib/ubuntu-12.04.5-amd64
   matrix:
     - TASK="build"
     - TASK="docs"
@@ -23,11 +21,9 @@ before_install:
       gem install asciidoctor coderay;
     fi
 
-install:
-  # Run "testClasses" instead of "assemble". We don't need the JARs/WARs for testing. Will reduce build time.
-  - if [[ $TASK != "docs" ]]; then
-      ./gradlew --info --stacktrace testClasses;
-    fi
+# Skip the installation step entirely; we don't need it for Gradle builds.
+# https://docs.travis-ci.com/user/customizing-the-build#Skipping-the-Installation-Step
+install: true
 
 script:
   # If we need to do an IDV build, run the script
@@ -45,10 +41,16 @@ script:
     else
       echo If available, test report at;
       echo http://unidata-tds-tests.s3.amazonaws.com/Travis/${TRAVIS_BRANCH}-${TRAVIS_BUILD_NUMBER}/${TRAVIS_JOB_NUMBER}/index.html;
-      ./gradlew --info --stacktrace testAll;
+
+      JNA_LIB=-Djna.library.path=$TRAVIS_BUILD_DIR/travis/lib/ubuntu-12.04.5-amd64;
+      CONTENT_ROOT=-Dtds.content.root.path=$TRAVIS_BUILD_DIR/tds/src/test/content;
+      DOWNLOAD_DIR=-Dtds.download.dir=/tmp/download;
+      SYSTEM_PROPS="$JNA_LIB $CONTENT_ROOT $DOWNLOAD_DIR"
+
+      ./gradlew $SYSTEM_PROPS --info --stacktrace testAll;
     fi
 
-# See https://docs.travis-ci.com/user/languages/java/#Projects-Using-Gradle
+# See https://docs.travis-ci.com/user/languages/java/#Caching
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
