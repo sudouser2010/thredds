@@ -29,7 +29,7 @@ of Tomcat, Java, and the TDS; and be familiar with the
 <<GettingStarted#files,Tomcat server configuration>>; and the
 <<GettingStarted#manager,Tomcat manager application>>.
 
-== Why Is Security Important?
+== [Why Is Security Important?](#why)
 
 === Be afraid
 
