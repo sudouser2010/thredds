@@ -7,7 +7,6 @@ package dap4.servlet;
 import dap4.core.ce.CEConstraint;
 import dap4.core.dmr.*;
 import dap4.core.util.DapException;
-import dap4.core.util.DapSort;
 import dap4.core.util.Odometer;
 import dap4.core.util.Slice;
 import dap4.dap4lib.DMRPrinter;
@@ -166,7 +165,7 @@ public class Generator extends DapSerializer
             pw.close();
             sw.close();
             String tmp = sw.toString();
-            this.cw.writeDMR(tmp);
+            this.cw.cacheDMR(tmp);
             this.cw.flush();
         } catch (Exception e) {
             throw new DapException(e);
@@ -193,13 +192,13 @@ public class Generator extends DapSerializer
             throws DapException
     {
         writer.startVariable();
-        if(dapvar.getSort() == DapSort.ATOMICVARIABLE) {
-            atomicVariable((DapAtomicVariable) dapvar);
-        } else if(dapvar.getSort() == DapSort.STRUCTURE) {
-            structure((DapStructure) dapvar);
-        } else if(dapvar.getSort() == DapSort.SEQUENCE) {
-            sequence((DapSequence) dapvar);
-        } else
+        if(dapvar.isAtomic() || dapvar.isEnum())
+            atomicVariable(dapvar);
+        else if(dapvar.isStructure())
+            structureVariable(dapvar);
+        else if(dapvar.isSequence())
+            sequenceVariable(dapvar);
+        else
             throw new DapException("generate var: not a variable:" + dapvar.getFQN());
         try {
             writer.endVariable();
@@ -209,7 +208,7 @@ public class Generator extends DapSerializer
     }
 
     public void
-    atomicVariable(DapAtomicVariable dapvar)
+    atomicVariable(DapVariable dapvar)
             throws DapException
     {
         DapType basetype = dapvar.getBaseType();
@@ -239,16 +238,17 @@ public class Generator extends DapSerializer
     }
 
     public void
-    structure(DapStructure struct)
+    structureVariable(DapVariable var)
             throws DapException
     {
+        DapStructure struct = (DapStructure) var.getBaseType();
         List<DapVariable> fields = struct.getFields();
         Odometer odom = null;
-        if(struct.getRank() == 0) {//scalar
+        if(var.getRank() == 0) {//scalar
             odom = Odometer.factoryScalar();
         } else {// dimensioned
-            List<Slice> slices = ce.getConstrainedSlices(struct);
-            odom = Odometer.factory(slices, struct.getDimensions());
+            List<Slice> slices = ce.getConstrainedSlices(var);
+            odom = Odometer.factory(slices, var.getDimensions());
         }
         while(odom.hasNext()) {
             // generate a value for each field recursively
@@ -261,16 +261,17 @@ public class Generator extends DapSerializer
     }
 
     public void
-    sequence(DapSequence seq)
+    sequenceVariable(DapVariable var)
             throws DapException
     {
+        DapSequence seq = (DapSequence) var.getBaseType();
         List<DapVariable> fields = seq.getFields();
         Odometer odom = null;
-        if(seq.getRank() == 0) {//scalar
+        if(var.getRank() == 0) {//scalar
             odom = Odometer.factoryScalar();
         } else {// dimensioned
-            List<Slice> slices = ce.getConstrainedSlices(seq);
-            odom = Odometer.factory(slices, seq.getDimensions());
+            List<Slice> slices = ce.getConstrainedSlices(var);
+            odom = Odometer.factory(slices, var.getDimensions());
         }
         try {
             while(odom.hasNext()) {
@@ -295,7 +296,7 @@ public class Generator extends DapSerializer
     stringify(Object v)
     {
         if(v.getClass().isArray())
-            return stringify(java.lang.reflect.Array.get(v,0));
+            return stringify(java.lang.reflect.Array.get(v, 0));
         if(v instanceof Float || v instanceof Double)
             return v.toString();
         if(v instanceof Byte)

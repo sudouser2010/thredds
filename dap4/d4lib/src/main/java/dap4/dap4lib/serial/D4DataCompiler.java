@@ -8,7 +8,6 @@ package dap4.dap4lib.serial;
 import dap4.core.dmr.*;
 import dap4.core.util.DapDump;
 import dap4.core.util.DapException;
-import dap4.core.util.DapSort;
 import dap4.core.util.DapUtil;
 import dap4.dap4lib.ChecksumMode;
 import dap4.dap4lib.LibTypeFcns;
@@ -98,16 +97,17 @@ public class D4DataCompiler
     {
         boolean isscalar = dapvar.getRank() == 0;
         D4Cursor array = null;
-        if(dapvar.getSort() == DapSort.ATOMICVARIABLE) {
-            array = compileAtomicVar((DapAtomicVariable) dapvar, container);
-        } else if(dapvar.getSort() == DapSort.STRUCTURE) {
+        DapType type = dapvar.getBaseType();
+        if(type.isAtomic() || type.isEnumType())
+            array = compileAtomicVar(dapvar, container);
+        else if(type.isStructType()) {
             if(isscalar)
-                array = compileStructure((DapStructure) dapvar, container);
+                array = compileStructure(dapvar, (DapStructure)type, container);
             else
                 array = compileStructureArray(dapvar, container);
-        } else if(dapvar.getSort() == DapSort.SEQUENCE) {
+        } else if(type.isSeqType()) {
             if(isscalar)
-                array = compileSequence((DapSequence) dapvar, container);
+                array = compileSequence(dapvar, (DapSequence)type, container);
             else
                 array = compileSequenceArray(dapvar, container);
         }
@@ -121,20 +121,21 @@ public class D4DataCompiler
     }
 
     /**
-     * @param atomvar
+     * @param var
      * @param container
      * @return
      * @throws DapException
      */
+
     protected D4Cursor
-    compileAtomicVar(DapAtomicVariable atomvar, D4Cursor container)
+    compileAtomicVar(DapVariable var, D4Cursor container)
             throws DapException
     {
-        DapType daptype = atomvar.getBaseType();
-        D4Cursor data = new D4Cursor(Scheme.ATOMIC, this.dsp, atomvar);
+        DapType daptype = var.getBaseType();
+        D4Cursor data = new D4Cursor(Scheme.ATOMIC, this.dsp, var);
         data.setOffset(getPos(this.databuffer));
         long total = 0;
-        long dimproduct = atomvar.getCount();
+        long dimproduct = var.getCount();
         if(!daptype.isEnumType() && !daptype.isFixedSize()) {
             // this is a string, url, or opaque
             long[] positions = new long[(int) dimproduct];
@@ -162,12 +163,12 @@ public class D4DataCompiler
     compileStructureArray(DapVariable dapvar, D4Cursor container)
             throws DapException
     {
-        DapStructure struct = (DapStructure) dapvar;
-        D4Cursor structarray = new D4Cursor(Scheme.STRUCTARRAY, this.dsp, struct)
+        DapStructure struct = (DapStructure) dapvar.getBaseType();
+        D4Cursor structarray = new D4Cursor(Scheme.STRUCTARRAY, this.dsp, dapvar)
                 .setOffset(getPos(this.databuffer));
-        long dimproduct = struct.getCount();
+        long dimproduct = dapvar.getCount();
         for(int i = 0; i < dimproduct; i++) {
-            D4Cursor instance = compileStructure(struct, structarray);
+            D4Cursor instance = compileStructure(dapvar, struct, structarray);
             structarray.addElement(i, instance);
         }
         return structarray;
@@ -182,17 +183,18 @@ public class D4DataCompiler
      * @throws DapException
      */
     protected D4Cursor
-    compileStructure(DapStructure dapstruct, D4Cursor container)
+    compileStructure(DapVariable var, DapStructure dapstruct, D4Cursor container)
             throws DapException
     {
         int pos = getPos(this.databuffer);
-        D4Cursor d4ds = new D4Cursor(Scheme.STRUCTURE, this.dsp, dapstruct)
+        D4Cursor d4ds = new D4Cursor(Scheme.STRUCTURE, this.dsp, var)
                 .setOffset(pos);
         List<DapVariable> dfields = dapstruct.getFields();
         for(int m = 0; m < dfields.size(); m++) {
             DapVariable dfield = dfields.get(m);
             D4Cursor dvfield = compileVar(dfield, d4ds);
             d4ds.addField(m, dvfield);
+            assert dfield.getParent() != null;
         }
         return d4ds;
     }
@@ -208,12 +210,12 @@ public class D4DataCompiler
     compileSequenceArray(DapVariable dapvar, D4Cursor container)
             throws DapException
     {
-        DapSequence dapseq = (DapSequence) dapvar;
-        D4Cursor seqarray = new D4Cursor(Scheme.SEQARRAY, this.dsp, dapseq)
+        DapSequence dapseq = (DapSequence) dapvar.getBaseType();
+        D4Cursor seqarray = new D4Cursor(Scheme.SEQARRAY, this.dsp, dapvar)
                 .setOffset(getPos(this.databuffer));
-        long dimproduct = dapseq.getCount();
+        long dimproduct = dapvar.getCount();
         for(int i = 0; i < dimproduct; i++) {
-            D4Cursor instance = compileSequence(dapseq, seqarray);
+            D4Cursor instance = compileSequence(dapvar, dapseq, seqarray);
             seqarray.addElement(i, instance);
         }
         return seqarray;
@@ -228,23 +230,24 @@ public class D4DataCompiler
      * @throws DapException
      */
     public D4Cursor
-    compileSequence(DapSequence dapseq, D4Cursor container)
+    compileSequence(DapVariable var, DapSequence dapseq, D4Cursor container)
             throws DapException
     {
         int pos = getPos(this.databuffer);
-        D4Cursor seq = new D4Cursor(Scheme.SEQUENCE, this.dsp, dapseq)
+        D4Cursor seq = new D4Cursor(Scheme.SEQUENCE, this.dsp, var)
                 .setOffset(pos);
         List<DapVariable> dfields = dapseq.getFields();
         // Get the count of the number of records
         long nrecs = getCount(this.databuffer);
         for(int r = 0; r < nrecs; r++) {
             pos = getPos(this.databuffer);
-            D4Cursor rec = new D4Cursor(D4Cursor.Scheme.RECORD, this.dsp, dapseq)
+            D4Cursor rec = new D4Cursor(D4Cursor.Scheme.RECORD, this.dsp, var)
                     .setOffset(pos);
             for(int m = 0; m < dfields.size(); m++) {
                 DapVariable dfield = dfields.get(m);
                 D4Cursor dvfield = compileVar(dfield, rec);
                 rec.addField(m, dvfield);
+                assert dfield.getParent() != null;
             }
             seq.addRecord(rec);
         }

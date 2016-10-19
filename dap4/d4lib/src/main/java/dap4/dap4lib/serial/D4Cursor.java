@@ -125,7 +125,7 @@ public class D4Cursor implements DataCursor
     {
         switch (this.scheme) {
         case ATOMIC:
-            return readAtomic(DapUtil.indexToSlices(index, (DapAtomicVariable) getTemplate()));
+            return readAtomic(DapUtil.indexToSlices(index, (DapVariable) getTemplate()));
         case STRUCTARRAY:
             return readStructure(index);
         case SEQARRAY:
@@ -143,7 +143,7 @@ public class D4Cursor implements DataCursor
         if(slices == null)
             throw new DapException("DataCursor.read: null set of slices");
         assert this.scheme == Scheme.ATOMIC;
-        DapAtomicVariable atomvar = (DapAtomicVariable) getTemplate();
+        DapVariable atomvar = (DapVariable) getTemplate();
         assert slices != null && slices.size() == atomvar.getRank();
         DapType basetype = atomvar.getBaseType();
         return readAs(atomvar, basetype, slices);
@@ -159,7 +159,7 @@ public class D4Cursor implements DataCursor
      * @throws DapException
      */
     protected Object
-    readAs(DapAtomicVariable atomvar, DapType basetype, List<Slice> slices)
+    readAs(DapVariable atomvar, DapType basetype, List<Slice> slices)
             throws DapException
     {
         if(basetype.getTypeSort() == TypeSort.Enum) {// short circuit this case
@@ -386,7 +386,8 @@ public class D4Cursor implements DataCursor
         if(getScheme() != Scheme.RECORD && getScheme() != Scheme.STRUCTURE)
             throw new IllegalStateException("Adding field to non-(structure|record) object");
         if(this.fields == null) {
-            List<DapVariable> fields = ((DapStructure) getTemplate()).getFields();
+            DapStructure ds = (DapStructure)((DapVariable)getTemplate()).getBaseType();
+            List<DapVariable> fields = ds.getFields();
             this.fields = new D4Cursor[fields.size()];
         }
         if(this.fields[m] != null)
@@ -407,7 +408,7 @@ public class D4Cursor implements DataCursor
     }
 
     public long
-    getElementSize(DapAtomicVariable v)
+    getElementSize(DapVariable v)
     {
         return v.getBaseType().isFixedSize() ? v.getBaseType().getSize() : 0;
     }

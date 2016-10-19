@@ -4,6 +4,7 @@
 package dap4.dap4lib.netcdf;
 
 import dap4.core.dmr.*;
+import dap4.core.util.DapSort;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -163,7 +164,9 @@ abstract public class Nc4Notes
 
         public DapType getType()
         {
-            return (DapType) this.node;
+            DapSort sort = this.node.getSort();
+            return (sort == DapSort.VARIABLE ? ((DapVariable)this.node).getBaseType()
+                                             : null);
         }
 
         public TypeNotes setOpaque(int len)

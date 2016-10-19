@@ -138,16 +138,16 @@ import java.util.List;
         super(CDMArrayStructure.computemembers((DapStructure) data.getTemplate()),
                 new SDI(), 0);
         this.template = (DapVariable) data.getTemplate();
+        this.basetype =  this.template.getBaseType();
         // Currently do not allow non-scalar sequences
         if(this.template.getRank() != 0)
             throw new DapException("Non-scalar sequences unsupported through CDM interface");
         assert data.getScheme() == DataCursor.Scheme.SEQUENCE;
         this.cdmroot = group;
         this.dsp = dsp;
-        this.basetype = this.template.getBaseType();
         this.seqdata = data;
         this.recordcount = this.seqdata.getRecordCount();
-        this.nmembers = ((DapStructure) template).getFields().size();
+        this.nmembers = ((DapStructure)this.basetype).getFields().size();
 
         // Fill in the structdata (in parent) and record vectors
         super.sdata = new StructureDataA[(int) this.recordcount];
@@ -206,8 +206,9 @@ import java.util.List;
     public String toString()
     {
         StringBuilder buf = new StringBuilder();
-        DapSequence seq = (DapSequence) this.template;
-        long dimsize = DapUtil.dimProduct(seq.getDimensions());
+        DapVariable var = this.template;
+        DapSequence seq = (DapSequence)this.basetype;
+        long dimsize = DapUtil.dimProduct(var.getDimensions());
         for(int i = 0; i < dimsize; i++) {
             List<DapVariable> fields = seq.getFields();
             if(i < (dimsize - 1))
@@ -302,8 +303,7 @@ import java.util.List;
             FieldSet fs = records[i];
             values[i] = fs.fields[memberindex];
         }
-        DapSequence template = (DapSequence)this.getTemplate();
-                DapVariable field = template.getField(memberindex);
+        DapVariable field = ((DapStructure)this.basetype).getField(memberindex);
         DapType base = field.getBaseType();
         if(base == null)
             throw new IllegalStateException("Unknown field type: "+field);

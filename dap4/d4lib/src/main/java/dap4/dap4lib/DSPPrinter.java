@@ -231,7 +231,7 @@ public class DSPPrinter
     {
         assert data.getScheme() == DataCursor.Scheme.ATOMIC;
         Object values = data.read(slices);
-        DapAtomicVariable atom = (DapAtomicVariable) data.getTemplate();
+        DapVariable atom = (DapVariable) data.getTemplate();
         String name = atom.getFQN();
         for(int i = 0; odom.hasNext(); i++) {
             Index index = odom.next();
@@ -248,7 +248,7 @@ public class DSPPrinter
     {
         assert datav.getScheme() == DataCursor.Scheme.ATOMIC;
         Object value = datav.read(pos);
-        DapAtomicVariable av = (DapAtomicVariable) datav.getTemplate();
+        DapVariable av = (DapVariable) datav.getTemplate();
         printer.print(valueString(value, 0, av.getBaseType()));
         printer.eol();
     }

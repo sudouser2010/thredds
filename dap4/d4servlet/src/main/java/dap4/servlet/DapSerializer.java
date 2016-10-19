@@ -123,7 +123,7 @@ public class DapSerializer
     writeAtomicVariable(DataCursor data, SerialWriter dst)
             throws IOException
     {
-        DapAtomicVariable template = (DapAtomicVariable) data.getTemplate();
+        DapVariable template = (DapVariable) data.getTemplate();
         assert (this.ce.references(template));
         DapType basetype = template.getBaseType();
         if(template.getRank() == 0) { // scalar
@@ -151,7 +151,8 @@ public class DapSerializer
     writeStructure(DataCursor data, SerialWriter dst)
             throws IOException
     {
-        DapStructure template = (DapStructure) data.getTemplate();
+        DapVariable template = (DapVariable) data.getTemplate();
+        DapStructure ds = (DapStructure)template.getBaseType();
         assert (this.ce.references(template));
         if(template.getRank() == 0) { // scalar
             writeStructure1(data, dst);
@@ -179,9 +180,11 @@ public class DapSerializer
             throws IOException
     {
         assert instance.getScheme() == DataCursor.Scheme.STRUCTURE;
-        DapStructure template = (DapStructure) instance.getTemplate();
+        DapVariable template = (DapVariable) instance.getTemplate();
         assert (this.ce.references(template));
-        List<DapVariable> fields = template.getFields();
+        DapStructure ds = (DapStructure)template.getBaseType();
+
+        List<DapVariable> fields = ds.getFields();
         for(int i = 0; i < fields.size(); i++) {
             DapVariable field = fields.get(i);
             if(!this.ce.references(field)) continue; // not in the view
@@ -202,7 +205,8 @@ public class DapSerializer
     writeSequence(DataCursor data, SerialWriter dst)
             throws IOException
     {
-        DapSequence template = (DapSequence) data.getTemplate();
+        DapVariable template = (DapVariable) data.getTemplate();
+        DapSequence ds = (DapSequence)template.getBaseType();
         assert (this.ce.references(template));
         if(template.getRank() == 0) { // scalar
             writeSequence1(data, dst);
@@ -231,7 +235,8 @@ public class DapSerializer
     writeSequence1(DataCursor instance, SerialWriter dst)
             throws IOException
     {
-        DapSequence template = (DapSequence) instance.getTemplate();
+        DapVariable template = (DapVariable) instance.getTemplate();
+        DapSequence seq = (DapSequence) template.getBaseType();
         assert (this.ce.references(template));
         long nrecs = instance.getRecordCount();
         dst.writeCount(nrecs);
@@ -253,8 +258,9 @@ public class DapSerializer
     writeRecord(DataCursor record, SerialWriter dst)
             throws IOException
     {
-        DapSequence template = (DapSequence) record.getTemplate();
-        List<DapVariable> fields = template.getFields();
+        DapVariable template = (DapVariable)record.getTemplate();
+        DapSequence seq = (DapSequence)template.getBaseType();
+        List<DapVariable> fields = seq.getFields();
         for(int i = 0; i < fields.size(); i++) {
             DapVariable field = fields.get(i);
             if(!this.ce.references(field)) continue; // not in the view

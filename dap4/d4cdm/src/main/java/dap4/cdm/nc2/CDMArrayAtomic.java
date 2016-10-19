@@ -598,37 +598,5 @@ import static dap4.core.data.DataCursor.Scheme;
 
     //////////////////////////////////////////////////
     // Utilities
-   /*
-    protected DapSort
-    computesort(Array array)
-            throws DapException
-    {
-        DapSort sort = null;
-        Array content = (Array) this.data;
-        switch (content.getDataType()) {
-        case BOOLEAN:
-        case BYTE:
-        case CHAR:
-        case SHORT:
-        case INT:
-        case LONG:
-        case UBYTE:
-        case USHORT:
-        case UINT:
-        case ULONG:
-        case FLOAT:
-        case DOUBLE:
-        case STRING:
-        case OBJECT:
-            return DapSort.ATOMICVARIABLE;
-        case STRUCTURE:
-            return DapSort.STRUCTURE;
-        case SEQUENCE:
-            return DapSort.SEQUENCE;
-        default:
-            break; // sequence is not supported
-        }
-        throw new DapException("Unsupported datatype: " + content.getDataType());
-    } */
 }
 

@@ -41,7 +41,7 @@ abstract public class Dap4Actions extends Dap4EventHandler
             DapSort.GROUP,
             DapSort.DIMENSION,
             DapSort.MAP,
-            DapSort.ATOMICVARIABLE,
+            DapSort.VARIABLE,
             DapSort.STRUCTURE,
             DapSort.SEQUENCE,
             DapSort.ATTRIBUTESET

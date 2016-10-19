@@ -23,7 +23,7 @@ import java.util.List;
 
 public class TestParserDMR extends DapTestCommon
 {
-    static final boolean PARSEDEBUG = false;
+    static final boolean PARSEDEBUG = true;
 
     // Do a special test to compare the dmr parser print output
     // to the original input. This will often fail in non-essential
@@ -83,8 +83,8 @@ public class TestParserDMR extends DapTestCommon
     protected void
     chooseTestcases()
     {
-        if(false) {
-            chosentests = locate("test_atomic_types");
+        if(true) {
+            chosentests = locate("test_vlen1.nc");
         } else {
             for(TestCase tc : alltestcases) {
                 chosentests.add(tc);

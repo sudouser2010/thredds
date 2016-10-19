@@ -44,23 +44,11 @@ public class DMRFactory
         return new DapMap(target);
     }
 
-    public DapAtomicVariable
-    newAtomicVariable(String name, DapType t)
-    {
-        return new DapAtomicVariable(name, t);
-    }
-
     public DapVariable
-    newStructureVariable(String name, DapType t)
+    newVariable(String name, DapType t)
     {
-        return new DapStructure(name);
+        return new DapVariable(name, t);
     }
-
-    public DapVariable
-    newSequenceVariable(String name, DapType t)
-        {
-            return new DapSequence(name);
-        }
 
     public DapGroup
     newGroup(String name)

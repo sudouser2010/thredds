@@ -5,7 +5,6 @@
 package dap4.core.dmr;
 
 import dap4.core.ce.CEConstraint;
-import dap4.core.data.DSP;
 import dap4.core.util.*;
 
 import java.util.*;
@@ -100,9 +99,7 @@ public class DapDataset extends DapGroup
         case ENUMERATION:
             this.allenums.add((DapEnumeration) node);
             break;
-        case ATOMICVARIABLE:
-        case SEQUENCE:
-        case STRUCTURE:
+        case VARIABLE:
             if(node.isTopLevel())
                 this.topvariables.add((DapVariable) node);
             this.allvariables.add((DapVariable) node);
@@ -123,7 +120,10 @@ public class DapDataset extends DapGroup
     //////////////////////////////////////////////////
     // Accessors
 
-    public CEConstraint getConstraint() {return this.ce;}
+    public CEConstraint getConstraint()
+    {
+        return this.ce;
+    }
 
     public DapDataset
     setConstraint(CEConstraint ce)
@@ -386,16 +386,7 @@ public class DapDataset extends DapGroup
                     sortR(groups.get(i), sortlist);
                 }
             break;
-        case SEQUENCE:
-        case STRUCTURE:
-            DapStructure struct = (DapStructure) node;
-            List<DapVariable> fields = struct.getFields();
-            if(fields != null)
-                for(int i = 0; i < fields.size(); i++) {
-                    sortR(fields.get(i), sortlist);
-                }
-            // fall thru
-        case ATOMICVARIABLE:
+        case VARIABLE:
             var = (DapVariable) node;
             attrs = var.getAttributes();
             if(attrs != null)

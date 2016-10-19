@@ -145,19 +145,19 @@ public class DapType extends DapNode implements DapDecl
     // Only used in static block
     protected DapType(TypeSort typesort)
     {
-        this(typesort.name());
-        setAtomicType(typesort);
+        this(typesort.name(),typesort);
     }
 
-    public DapType(String name)
+    public DapType(String name, TypeSort typesort)
     {
         super(name);
         if(sort == DapSort.ENUMERATION) {
-            setAtomicType(TypeSort.Enum); // enum is (currently)
+            setTypeSort(TypeSort.Enum); // enum is (currently)
             // the only user-extendible
             // atomic type
             addEnum((DapEnumeration) this);
-        }
+        } else
+            setTypeSort(typesort);
     }
 
     //////////////////////////////////////////////////
@@ -189,7 +189,7 @@ public class DapType extends DapNode implements DapDecl
         return (typesort == TypeSort.Enum ? this.getFQN() : this.getShortName());
     }
 
-    protected void setAtomicType(TypeSort typesort)
+    protected void setTypeSort(TypeSort typesort)
     {
         this.typesort = typesort;
     }
@@ -202,7 +202,7 @@ public class DapType extends DapNode implements DapDecl
             return typesort.isUnsigned();
     }
 
-    public boolean isAtomicType()
+    public boolean isAtomic()
     {
         return getTypeSort().isAtomic();
     }
@@ -248,9 +248,21 @@ public class DapType extends DapNode implements DapDecl
         return typesort.isFixedSize();
     }
 
-    public boolean isStructType() {return typesort.isStructType();}
-    public boolean isSeqType() {return typesort.isSeqType();}
-    public boolean isCompoundType() {return typesort.isCompoundType();}
+    public boolean isStructType()
+    {
+        return typesort.isStructType();
+    }
+
+    public boolean isSeqType()
+    {
+        return typesort.isSeqType();
+    }
+
+    public boolean isCompoundType()
+    {
+        return typesort.isCompoundType();
+    }
+
 
     public boolean isLegalAttrType()
     {

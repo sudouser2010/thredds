@@ -5,8 +5,8 @@
 package dap4.core.dmr;
 
 /**
- * This class defines a non-Dimensiond Dimension:
- * i.e. one with an atomic type.
+ * This class defines a Dimension:
+ * Modified 10/15/2016 to support zero-sized dimensions.
  */
 
 public class DapDimension extends DapNode implements DapDecl, Cloneable
@@ -21,10 +21,9 @@ public class DapDimension extends DapNode implements DapDecl, Cloneable
     //////////////////////////////////////////////////
     // Instance variables
 
-    protected long size = 0;
+    protected long size = UNDEFINED;
 
     protected boolean isshared = false;
-
 
     //////////////////////////////////////////////////
     // Constructors
@@ -58,6 +57,8 @@ public class DapDimension extends DapNode implements DapDecl, Cloneable
 
     public long getSize()
     {
+	if(size == UNDEFINED) 
+	    throw new IllegalStateException("Undefined dimension size");
         return size;
     }
 
@@ -76,10 +77,12 @@ public class DapDimension extends DapNode implements DapDecl, Cloneable
         this.isshared = tf;
     }
 
+/*
     public boolean isVariableLength()
     {
         return size == VARIABLELENGTH;
     }
+*/
 
     //////////////////////////////////////////////////
     // Clone Interface
@@ -99,7 +102,6 @@ public class DapDimension extends DapNode implements DapDecl, Cloneable
     public String toString()
     {
         String sortname = (sort == null ? "" : sort.name());
-        //String name = getFQN();
         String name = null;
         if(name == null) name = getShortName();
         if(name == null) name = "";

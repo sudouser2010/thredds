@@ -17,6 +17,7 @@ import com.sun.jna.ptr.IntByReference;
 import dap4.core.data.DSP;
 import dap4.core.data.DataCursor;
 import dap4.core.dmr.DMRFactory;
+import dap4.core.dmr.DapType;
 import dap4.core.dmr.DapVariable;
 import dap4.core.util.DapContext;
 import dap4.core.util.DapException;
@@ -165,7 +166,7 @@ public class Nc4DSP extends AbstractDSP
                         this.filepath, ncid, this.format);
             // Compile the DMR 
             Nc4DMRCompiler dmrcompiler = new Nc4DMRCompiler(this, ncid, dmrfactory);
-            this.dmr = dmrcompiler.compile();
+            setDMR(dmrcompiler.compile());
             return this;
         } catch (Exception t) {
             t.printStackTrace();
@@ -192,25 +193,26 @@ public class Nc4DSP extends AbstractDSP
             throws DapException
     {
         DataCursor vardata = super.getVariableData(var);
+        DapType type = var.getBaseType();
         if(vardata == null) {
-            switch (var.getSort()) {
-            case ATOMICVARIABLE:
-                vardata = new Nc4Cursor(DataCursor.Scheme.ATOMIC, var, this);
-                break;
-            case STRUCTURE:
+            switch (type.getTypeSort()) {
+            case Structure:
                 DataCursor.Scheme scheme = (var.getRank() == 0 ? DataCursor.Scheme.STRUCTURE
                         : DataCursor.Scheme.STRUCTARRAY);
                 vardata = new Nc4Cursor(scheme, var, this);
                 break;
-            case SEQUENCE:
+            case Sequence:
                 scheme = (var.getRank() == 0 ? DataCursor.Scheme.SEQUENCE
                         : DataCursor.Scheme.SEQARRAY);
                 vardata = new Nc4Cursor(scheme, var, this);
                 break;
             default:
-                throw new DapException("Unexpected cursor type: " + var);
+                if(!type.getTypeSort().isAtomic())
+                    throw new DapException("Unexpected cursor type: " + type);
+                vardata = new Nc4Cursor(DataCursor.Scheme.ATOMIC, var, this);
+                break;
             }
-            super.addVariableData(var,vardata);
+            super.addVariableData(var, vardata);
         }
         return vardata;
     }

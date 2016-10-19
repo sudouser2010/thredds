@@ -68,7 +68,8 @@ public class ChunkWriter extends OutputStream
         this.output = output;
         setOrder(order);
         setMode(mode);
-        header = ByteBuffer.allocate(SIZEOF_INTEGER).order(getOrder());
+        // Header must always go out in network order (aka big-endian)
+        header = ByteBuffer.allocate(SIZEOF_INTEGER).order(ByteOrder.BIG_ENDIAN);
     }
 
     //////////////////////////////////////////////////
@@ -145,7 +146,7 @@ public class ChunkWriter extends OutputStream
     }
 
     /**
-     * Write the DMR. What it really does is
+     * Cache the DMR. What it really does is
      * cache the DMR and write it at the point
      * where it is needed; either in close(), if writing
      * the DMR only, or in writeChunk() if writing data as well.
@@ -155,7 +156,7 @@ public class ChunkWriter extends OutputStream
      */
 
     public void
-    writeDMR(String dmr)
+    cacheDMR(String dmr)
             throws IOException
     {
         if(state != State.INITIAL)
@@ -202,9 +203,9 @@ public class ChunkWriter extends OutputStream
             int flags = DapUtil.CHUNK_DATA;
             if(order == ByteOrder.LITTLE_ENDIAN)
                 flags |= DapUtil.CHUNK_LITTLE_ENDIAN;
-            chunkheader(dxr8.length, flags, header);
+            chunkheader(dxr8.length, flags, this.header);
             // write the header
-            output.write(DapUtil.extract(header));
+            output.write(DapUtil.extract(this.header));
             state = State.DATA;
         }
         // write the DXR

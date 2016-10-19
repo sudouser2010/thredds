@@ -26,13 +26,14 @@ public enum DapSort
     ATTRIBUTE("Attribute", DapAttribute.class, ATTRIBUTESET, OTHERXML),
     DIMENSION("Dimension", DapDimension.class),
     MAP("Map", DapMap.class),
-    ATOMICVARIABLE("Variable", DapVariable.class),
+    VARIABLE("Variable", DapVariable.class),
     DATASET("Dataset", DapDataset.class),
     GROUP("Group", DapGroup.class, DATASET),
     ENUMERATION("Enumeration", DapEnumeration.class),
     ENUMCONST("EnumConst", DapEnumConst.class),
-    SEQUENCE("Sequence", DapSequence.class),
-    STRUCTURE("Structure", DapStructure.class,SEQUENCE),;
+    SEQUENCE("Sequence", DapSequence.class),    // sequence type, not variable
+    STRUCTURE("Structure", DapStructure.class,SEQUENCE),  // structure type, not variable
+    ;
 
     private final String name;
     private final Class classfor;

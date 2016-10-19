@@ -5,6 +5,7 @@
 package dap4.test;
 
 import dap4.core.data.DSPRegistry;
+import dap4.core.dmr.parser.Dap4ParserImpl;
 import dap4.core.util.DapDump;
 import dap4.dap4lib.AbstractDSP;
 import dap4.dap4lib.ChunkInputStream;
@@ -53,6 +54,7 @@ import java.util.List;
 public class TestServlet extends DapTestCommon
 {
     static protected final boolean DEBUG = false;
+    static protected final boolean PARSEDEBUG = false;
 
     //////////////////////////////////////////////////
     // Constants
@@ -168,7 +170,7 @@ public class TestServlet extends DapTestCommon
     chooseTestcases()
     {
         if(false) {
-            chosentests = locate("test_anon_dim.syn");
+            chosentests = locate("test_atomic_types.syn");
             prop_visual = true;
             prop_debug = true;
             prop_generate = false;
@@ -202,7 +204,7 @@ public class TestServlet extends DapTestCommon
     {
         System.err.println("Testcase: " + testcase.testinputpath);
         System.err.println("Baseline: " + testcase.baselinepath);
-
+        if(PARSEDEBUG) Dap4ParserImpl.setGlobalDebugLevel(1);
         for(String extension : testcase.extensions) {
             RequestMode ext = RequestMode.modeFor(extension);
             switch (ext) {

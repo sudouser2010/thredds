@@ -1,6 +1,8 @@
 package dap4.test;
 
+import dap4.core.ce.parser.CEParserImpl;
 import dap4.core.data.DSPRegistry;
+import dap4.core.dmr.parser.Dap4ParserImpl;
 import dap4.core.util.DapDump;
 import dap4.core.util.Escape;
 import dap4.dap4lib.ChunkInputStream;
@@ -37,6 +39,7 @@ import java.util.List;
 public class TestServletConstraints extends DapTestCommon
 {
     static protected final boolean DEBUG = false;
+    static protected final boolean CEPARSEDEBUG = true;
 
     //////////////////////////////////////////////////
     // Constants
@@ -102,7 +105,7 @@ public class TestServletConstraints extends DapTestCommon
             this.checksumming = checksumming;
             this.testinputpath = canonjoin(this.inputroot, dataset);
             this.baselinepath = canonjoin(this.baselineroot, dataset) + "." + id;
-            this.generatepath = canonjoin(this.generateroot, dataset);
+            this.generatepath = canonjoin(this.generateroot, dataset) + "." + id;
         }
 
         String makeurl(RequestMode ext)
@@ -183,11 +186,12 @@ public class TestServletConstraints extends DapTestCommon
     protected void
     chooseTestcases()
     {
-        if(false) {
+        if(true) {
             chosentests = locate(1);
             prop_visual = true;
             prop_debug = true;
             prop_generate = false;
+            prop_baseline = true;
         } else {
             for(TestCase tc : alltestcases) {
                 chosentests.add(tc);
@@ -217,6 +221,7 @@ public class TestServletConstraints extends DapTestCommon
     {
         System.err.println("Testcase: " + testcase.toString());
         System.err.println("Baseline: " + testcase.baselinepath);
+        if(CEPARSEDEBUG) CEParserImpl.setGlobalDebugLevel(1);
 
         for(String extension : testcase.extensions) {
             RequestMode ext = RequestMode.modeFor(extension);
@@ -268,7 +273,7 @@ public class TestServletConstraints extends DapTestCommon
     {
         String url = testcase.makeurl(RequestMode.DAP);
         String query = testcase.makequery();
-        String basepath = testcase.makeBasepath(RequestMode.DMR);
+        String basepath = testcase.makeBasepath(RequestMode.DAP);
 
         MvcResult result = perform(url, RESOURCEPATH, query, this.mockMvc);
 

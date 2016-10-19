@@ -91,18 +91,16 @@ public class DataToCDM
     {
         DapVariable d4var = (DapVariable) data.getTemplate();
         Array array = null;
-        switch (d4var.getSort()) {
-        case ATOMICVARIABLE:
+        switch (d4var.getBaseType().getTypeSort()) {
+        default: // atomic var
             array = createAtomicVar(data);
             break;
-        case SEQUENCE:
+        case Sequence:
             array = createSequence(data);
             break;
-        case STRUCTURE:
+        case Structure:
             array = createStructure(data);
             break;
-        default:
-            assert false : "Unexpected databuffer sort: " + d4var.getSort();
         }
         if(d4var.isTopLevel()) {
             // transfer the checksum attribute
@@ -142,10 +140,11 @@ public class DataToCDM
             throws DapException
     {
         CDMArrayStructure arraystruct = new CDMArrayStructure(this.cdmroot, data);
-        DapStructure struct = (DapStructure) data.getTemplate();
+        DapVariable var = (DapVariable) data.getTemplate();
+        DapStructure struct = (DapStructure)var.getBaseType();
         int nmembers = struct.getFields().size();
-        List<DapDimension> dimset = struct.getDimensions();
-        if(((DapVariable)data.getTemplate()).getRank()  == 0) { // scalar
+        List<DapDimension> dimset = var.getDimensions();
+        if(var.getRank()  == 0) { // scalar
             for(int f = 0; f < nmembers; f++) {
                 DataCursor dc = data.getField(f);
                 Array afield = createVar(dc);
@@ -182,8 +181,9 @@ public class DataToCDM
             throws DapException
     {
         CDMArraySequence arrayseq = new CDMArraySequence(this.cdmroot, data);
-        DapSequence template = (DapSequence) data.getTemplate();
-        List<DapDimension> dimset = template.getDimensions();
+        DapVariable var = (DapVariable) data.getTemplate();
+        DapSequence template = (DapSequence) var.getBaseType();
+        List<DapDimension> dimset = var.getDimensions();
         long dimsize = DapUtil.dimProduct(dimset);
         int nfields = template.getFields().size();
         for(int r = 0; r < data.getRecordCount(); r++) {

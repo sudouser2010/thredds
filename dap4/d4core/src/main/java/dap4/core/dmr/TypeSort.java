@@ -53,15 +53,15 @@ public enum TypeSort
     URL("URL", ISSTRING | ISLEGALATTRTYPE | ISATOMIC),
     Opaque("Opaque", ISOPAQUE | ISLEGALATTRTYPE | ISATOMIC),
     Enum("Enum", ISENUM | ISFIXEDSIZE | ISLEGALATTRTYPE),
-    Structure("Struct", ISSTRUCT|ISCOMPOUND), // Add this to avoid having to check the DapSort
-    Sequence("Seq", ISSEQ|ISCOMPOUND); // Add this to avoid having to check the DapSort
+    Structure("Structure", ISSTRUCT|ISCOMPOUND), // Add this to avoid having to check the DapSort
+    Sequence("Sequence", ISSEQ|ISCOMPOUND); // Add this to avoid having to check the DapSort
 
     private final String typename;
     private final int classification;
 
     TypeSort(String typename, int classification)
     {
-        this.typename = typename;
+        this.typename = typename; //Must match xml variable open name
         this.classification = classification;
     }
 

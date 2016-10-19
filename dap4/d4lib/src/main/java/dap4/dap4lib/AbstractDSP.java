@@ -36,6 +36,10 @@ abstract public class AbstractDSP implements DSP
 
     static public final boolean USEDOM = false;
 
+    static protected final String DAPVERSION = "4.0";
+    static protected final String DMRVERSION = "1.0";
+    static protected final String DMRNS = "http://xml.opendap.org/ns/DAP/4.0#";
+
     //////////////////////////////////////////////////
     // Instance variables
 
@@ -126,6 +130,13 @@ abstract public class AbstractDSP implements DSP
     setDMR(DapDataset dmr)
     {
         this.dmr = dmr;
+        if(getDMR() != null) {
+            // Add some canonical attributes to the  <Dataset>
+            getDMR().setDataset(getDMR());
+            getDMR().setDapVersion(DAPVERSION);
+            getDMR().setDMRVersion(DMRVERSION);
+            getDMR().setNS(DMRNS);
+        }
     }
 
     protected void
@@ -213,11 +224,9 @@ abstract public class AbstractDSP implements DSP
         List<DapNode> nodes = dataset.getNodeList();
         for(DapNode node : nodes) {
             switch (node.getSort()) {
-            case SEQUENCE:
-            case STRUCTURE:
             case GROUP:
             case DATASET:
-            case ATOMICVARIABLE:
+            case VARIABLE:
                 Map<String, DapAttribute> attrs = node.getAttributes();
                 if(attrs.size() > 0) {
                     List<DapAttribute> suppressed = new ArrayList<>();

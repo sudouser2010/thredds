@@ -150,13 +150,13 @@ public class DMRToCDM
             throws DapException
     {
         Variable cdmvar = null;
-        if(dapvar.getSort() == DapSort.ATOMICVARIABLE) {
-            DapAtomicVariable atomvar = (DapAtomicVariable) dapvar;
+	DapType basetype = dapvar.getBaseType();
+        if(basetype.isAtomic()) {
+            DapVariable atomvar = (DapVariable) dapvar;
             cdmvar = new Variable(ncfile,
                     cdmgroup,
                     cdmparentstruct,
                     atomvar.getShortName());
-            DapType basetype = atomvar.getBaseType();
             DataType cdmbasetype;
             if(basetype.isEnumType())
                 cdmbasetype = CDMTypeFcns.enumTypeFor(basetype);
@@ -172,8 +172,8 @@ public class DMRToCDM
                 cdmvar.setEnumTypedef(cdmenum);
             }
             nodemap.put(dapvar, cdmvar);
-        } else if(dapvar.getSort() == DapSort.STRUCTURE) {
-            DapStructure dapstruct = (DapStructure) dapvar;
+        } else if(basetype.isStructType()) {
+            DapStructure dapstruct = (DapStructure) basetype;
             Structure cdmstruct = new Structure(ncfile,
                     cdmgroup,
                     cdmparentstruct,
@@ -184,8 +184,8 @@ public class DMRToCDM
             for(DapVariable field : dapstruct.getFields()) {
                 createVar(field, ncfile, nodemap, cdmgroup, cdmstruct);
             }
-        } else if(dapvar.getSort() == DapSort.SEQUENCE) {
-            DapSequence dapseq = (DapSequence) dapvar;
+        } else if(basetype.isSeqType()) {
+            DapSequence dapseq = (DapSequence) basetype;
             // In general one would convert the sequence
             // to a CDM sequence with vlen
             // so Sequence {...} s[d1]...[dn]
@@ -217,7 +217,7 @@ public class DMRToCDM
             Dimension cdmdim = createDimensionRef(dim, cdmgroup, nodemap);
             cdmdims.add(cdmdim);
         }
-        if(dapvar.getSort() == DapSort.SEQUENCE) {
+        if(basetype.isSeqType()) {
             // Add the final vlen
             cdmdims.add(Dimension.VLEN);
         }
@@ -239,12 +239,10 @@ public class DMRToCDM
     createDimension(DapDimension dapdim, Group cdmgroup, NodeMap nodemap)
             throws DapException
     {
-        if(dapdim.isVariableLength()) {
-            nodemap.put(dapdim, Dimension.VLEN);
-        } else if(dapdim.isShared()) {
+        if(dapdim.isShared()) {
             if(nodemap.containsKey(dapdim))
                 throw new DapException("Attempt to declare dimension twice:" + dapdim.getFQN());
-            Dimension cdmdim = new Dimension(dapdim.getShortName(), (int) dapdim.getSize(), true, false, dapdim.isVariableLength());
+            Dimension cdmdim = new Dimension(dapdim.getShortName(), (int) dapdim.getSize(), true, false, false);
             nodemap.put(dapdim, cdmdim);
             cdmgroup.addDimension(cdmdim);
         } else

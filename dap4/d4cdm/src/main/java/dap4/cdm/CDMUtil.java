@@ -260,19 +260,18 @@ abstract public class CDMUtil
     static public int
     computeVariableSize(View view, DapVariable var, boolean scalar)
     {
+	DapType dt = var.getBaseType();
         ViewVariable annotation = view.getAnnotation(var);
         int dimproduct = (scalar ? 1 : computeDimProduct(annotation.getSlices()));
         int elementsize = 0;
-        switch (var.getSort()) {
-        case ATOMICVARIABLE:
-	        // This does not work for String or Opaque.
-            DapType dt = ((DapAtomicVariable) var).getBaseType();
+        switch (dt.getTypeSort()) {
+	default: // atomic variable
+            // This does not work for String or Opaque.
             elementsize =  CDMUtil.daptypeSize(dt.getTypeSort());
             break;
         case STRUCTURE:
         case SEQUENCE:
-        case GRID:
-            for(DapVariable field : ((DapStructure) var).getFields()) {
+            for(DapVariable field : ((DapStructure) dt).getFields()) {
                 elementsize += computeVariableSize(dataset, field, false);
             }
             break;

@@ -74,8 +74,8 @@ abstract public class DapNode
     {
         // Use Instanceof to figure out the sort
         // Because of subclass relationships, order is important
-        if(this instanceof DapAtomicVariable)
-            this.sort = DapSort.ATOMICVARIABLE;
+        if(this instanceof DapVariable)
+            this.sort = DapSort.VARIABLE;
         else if(this instanceof DapSequence)
             this.sort = DapSort.SEQUENCE;
         else if(this instanceof DapStructure)
@@ -446,7 +446,7 @@ abstract public class DapNode
             case STRUCTURE:
             case SEQUENCE:
             case ENUMCONST:
-            case ATOMICVARIABLE:
+            case VARIABLE:
                 fqn.append('.');
                 fqn.append(current.getEscapedShortName());
                 break;

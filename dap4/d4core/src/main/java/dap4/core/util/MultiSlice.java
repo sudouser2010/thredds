@@ -37,16 +37,16 @@ public class MultiSlice extends Slice
         this.slices = slices;
         finish();
         // provide values for first, last, etc
-        this.first = -1;
-        this.last = -1;
-        this.stride = -1;
-        this.size = -1;
+        this.first = UNDEFINED;
+        this.stop = UNDEFINED;
+        this.stride = UNDEFINED;
+        this.maxsize = UNDEFINED;
         for(int i = 0; i < this.slices.size(); i++) {
             Slice s = this.slices.get(i);
             this.first = (this.first < 0 ? s.getFirst() : Math.min(this.first, s.getFirst()));
-            this.last = Math.max(this.last, s.getLast());
+            this.stop = Math.max(this.stop, s.getStop());
             this.stride = Math.max(this.stride, s.getStride());
-            this.size = Math.max(this.size, s.getMaxSize());
+            this.maxsize = Math.max(this.maxsize, s.getMax());
         }
         this.whole = false;
         this.constrained = true; // by definition
@@ -109,18 +109,18 @@ public class MultiSlice extends Slice
     finish()
             throws dap4.core.util.DapException
     {
-        this.size = -1;
+        this.maxsize = UNDEFINED;
         for(int i = 0; i < slices.size(); i++) {// size is max size
             Slice sl = this.slices.get(i);
             assert (sl.getSort() == Slice.Sort.Single);
             sl.finish();
-            if(this.size < sl.getMaxSize())
-                this.size = sl.getMaxSize();
+            if(this.maxsize < sl.getMax())
+                this.maxsize = sl.getMax();
         }
-        if(this.size < 0)
+        if(this.maxsize < 0)
             throw new dap4.core.util.DapException("Cannot compute multislice size");
         for(int i = 0; i < slices.size(); i++) {
-            this.slices.get(i).setMaxSize(this.size);
+            this.slices.get(i).setMaxSize(this.maxsize);
         }
         this.count = 0;
         for(int i = 0; i < slices.size(); i++) {
@@ -146,13 +146,14 @@ public class MultiSlice extends Slice
     }
 
     @Override
-    public void
+    public Slice
     setMaxSize(long size)
             throws DapException
     {
         for(int i = 0; i < slices.size(); i++) {
             slices.get(i).setMaxSize(size);
         }
+        return this;
     }
 
 }

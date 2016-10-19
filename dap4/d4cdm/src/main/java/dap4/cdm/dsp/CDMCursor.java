@@ -122,7 +122,7 @@ public class CDMCursor implements DataCursor
     {
         switch (this.scheme) {
         case ATOMIC:
-            return readAtomic(DapUtil.indexToSlices(index, (DapAtomicVariable) getTemplate()));
+            return readAtomic(DapUtil.indexToSlices(index, (DapVariable) getTemplate()));
         case STRUCTARRAY:
             return readStructure(index);
         case SEQARRAY:
@@ -146,7 +146,7 @@ public class CDMCursor implements DataCursor
         if(slices == null)
             throw new DapException("DataCursor.read: null set of slices");
         assert (this.scheme == scheme.ATOMIC);
-        DapAtomicVariable atomvar = (DapAtomicVariable) getTemplate();
+        DapVariable atomvar = (DapVariable) getTemplate();
         DapType basetype = atomvar.getBaseType();
         int rank = atomvar.getRank();
         assert slices != null && slices.size() == rank;
@@ -178,14 +178,15 @@ public class CDMCursor implements DataCursor
             throws DapException
     {
         assert (index != null);
-        DapStructure template = (DapStructure) getTemplate();
+        DapVariable var = (DapVariable) getTemplate();
+        DapStructure template = (DapStructure) var.getBaseType();
         long pos = index.index();
-        if(pos < 0 || pos > template.getCount())
+        if(pos < 0 || pos > var.getCount())
             throw new IndexOutOfBoundsException("read: " + index);
         ArrayStructure sarray = (ArrayStructure) this.array;
         CDMCursor instance;
         StructureData data;
-        if(template.getRank() == 0) {
+        if(var.getRank() == 0) {
             assert (this.scheme == scheme.STRUCTURE);
             data = sarray.getStructureData(0);
             instance = this.setStructureData(data);
@@ -209,21 +210,21 @@ public class CDMCursor implements DataCursor
         StructureMembers.Member member = this.structdata.getMembers().get(findex);
         if(member == null)
             throw new DapException("getField: field index out of bounds: " + findex);
-        DapVariable field = ((DapStructure) getTemplate()).getField(findex);
+	DapVariable var = (DapVariable)getTemplate();
+	DapStructure struct = (DapStructure)var.getBaseType();
+        DapVariable field = struct.getField(findex);
         Array array = this.structdata.getArray(member);
         CDMCursor instance = null;
-        switch (field.getSort()) {
-        case ATOMICVARIABLE:
+        switch (field.getBaseType().getTypeSort()) {
+        default: //Atomic variable
             instance = new CDMCursor(Scheme.ATOMIC, field, dsp).setArray(array);
             break;
-        case SEQUENCE:
+        case Sequence:
             throw new UnsupportedOperationException();
-        case STRUCTURE:
+        case Structure:
             Scheme scheme = (field.getRank() == 0 ? Scheme.STRUCTURE : Scheme.STRUCTARRAY);
             instance = new CDMCursor(scheme, field, dsp).setArray(array);
             break;
-        default:
-            throw new DapException("Unexpected field type: "+field);
         }
         return instance;
     }

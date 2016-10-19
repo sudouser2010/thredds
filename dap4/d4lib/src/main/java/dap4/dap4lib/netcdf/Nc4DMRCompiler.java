@@ -14,6 +14,8 @@ import dap4.core.util.DapException;
 import dap4.core.util.DapSort;
 import dap4.core.util.DapUtil;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 
@@ -283,11 +285,10 @@ public class Nc4DMRCompiler
     {
         DapStructure ds = factory.newStructure(name);
         ds.annotate(ti);
-        ds.setTemplate(true);
         ti.set(ds);
         ti.group().addDecl(ds);
         for(int i = 0; i < nfields; i++) {
-            buildfield(ti, ds, i);
+            buildfield(ti, i);
         }
         // Finally, extract the size of the structure
         int ret;
@@ -299,7 +300,7 @@ public class Nc4DMRCompiler
     }
 
     protected void
-    buildfield(TypeNotes ti, DapStructure ds, int fid)
+    buildfield(TypeNotes ti, int fid)
             throws DapException
     {
         int ret;
@@ -316,27 +317,28 @@ public class Nc4DMRCompiler
         if(baset == null)
             throw new DapException("Undefined field base type: " + fieldtype);
         int[] dimsizes = getFieldDimsizes(ti.gid, ti.id, fid, ndimsp.getValue());
-        makeField(ti, ds, fid, makeString(namep), baset, offsetp.intValue(), dimsizes);
+        makeField(ti,fid, makeString(namep), baset, offsetp.intValue(), dimsizes);
     }
 
     protected void
-    makeField(TypeNotes parent, DapStructure ds, int index, String name, TypeNotes baset, int offset, int[] dimsizes)
+    makeField(TypeNotes parent, int index, String name, TypeNotes baset, int offset, int[] dimsizes)
             throws DapException
     {
         DapVariable field;
+        DapStructure ds = (DapStructure)parent.getType();
         FieldNotes notes = new FieldNotes(parent, index, offset)
                 .setBaseType(baset);
         switch (baset.getType().getTypeSort()) {
         case Structure:
-            field = factory.newStructure(name);
+            field = factory.newVariable(name,ds);
             field.annotate(notes);
             break;
         case Sequence:
-            field = factory.newSequence(name);
+            field = factory.newVariable(name,ds);
             field.annotate(notes);
             break;
         default:
-            field = factory.newAtomicVariable(name, baset.getType());
+            field = factory.newVariable(name, baset.getType());
             field.annotate(notes);
             break;
         }
@@ -348,6 +350,7 @@ public class Nc4DMRCompiler
             }
         }
         ds.addField(field);
+        assert field.getParent() != null;
     }
 
     protected void
@@ -370,25 +373,23 @@ public class Nc4DMRCompiler
         if(xtype == null)
             throw new DapException("Unknown type id: " + xtype.id);
         DapVariable var;
-        switch (xtype.node.getSort()) {
-        case ATOMICTYPE:
-            var = factory.newAtomicVariable(name, xtype.getType());
+        switch (((DapType)xtype.node).getTypeSort()) {
+        default: /* atomic */
+            var = factory.newVariable(name, xtype.getType());
             var.annotate(vi);
             break;
-        case ENUMERATION:
-            var = factory.newAtomicVariable(name, xtype.getType());
+        case Enum:
+            var = factory.newVariable(name, xtype.getType());
             var.annotate(vi);
             break;
-        case STRUCTURE:
+        case Structure:
             DapStructure st = (DapStructure) xtype.getDecl();
-            var = cloneStructure(st, name, factory);
+            var = factory.newVariable(name, xtype.getType());
             break;
-        case SEQUENCE:
-            DapStructure seq = (DapStructure) xtype.getDecl();
-            var = cloneStructure(seq, name, factory);
+        case Sequence:
+            DapSequence seq = (DapSequence) xtype.getDecl();
+            var = factory.newVariable(name, xtype.getType());
             break;
-        default:
-            throw new DapException("Unexpected Variable basetype: " + xtype.node);
         }
         vi.set(var);
         vi.group().addDecl(var);
@@ -404,6 +405,12 @@ public class Nc4DMRCompiler
             DapAttribute sizetag = factory.newAttribute(UCARTAGOPAQUE, DapType.INT64);
             sizetag.setValues(new Object[]{(long) xtype.opaquelen});
             var.addAttribute(sizetag);
+        }
+        // If struct or sequence, make var the parent of the fields
+        if(!var.isAtomic()) {
+            DapStructure ds = (DapStructure)var.getBaseType();
+            for(DapVariable field: ds.getFields())
+                field.setParent(var);
         }
         // fill in any attributes
         String[] attnames = getAttributes(gid, vid);
@@ -421,14 +428,13 @@ public class Nc4DMRCompiler
         // of the basetype. Field name is same as the vlen type
         DapSequence ds = factory.newSequence(vname);
         ds.annotate(ti);
-        ds.setTemplate(true);
         ti.set(ds);
         ti.group().addDecl(ds);
         ti.markVlen();
         TypeNotes baset = TypeNotes.find(basetype);
         if(baset == null)
             throw new DapException("Undefined vlen basetype: " + basetype);
-        makeField(ti, ds, 0, vname, baset, 0, new int[0]);
+        makeField(ti, 0, vname, baset, 0, new int[0]);
         // Annotate to indicate that this came from a vlen
         DapAttribute tag = factory.newAttribute(UCARTAGVLEN, DapType.INT8);
         tag.setValues(new Object[]{(Byte) (byte) 1});
@@ -872,76 +878,6 @@ public class Nc4DMRCompiler
                 DapType.STRING);
         orig.setValues(new String[]{fullname});
         return orig;
-    }
-
-    /**
-     * @param template
-     * @param factory
-     * @return
-     * @throws DapException
-     */
-    protected DapAtomicVariable
-    cloneAtomicvar(DapVariable template, DMRFactory factory)
-            throws DapException
-    {
-        assert template.getSort() == DapSort.ATOMICVARIABLE;
-        DapAtomicVariable dup = factory.newAtomicVariable(template.getShortName(), template.getBaseType());
-        // Duplicate annotation
-        Notes notes = (Notes) template.annotation();
-        if(notes != null) {
-            notes = (Notes) notes.clone();
-            dup.annotate(notes);
-        }
-        return dup;
-    }
-
-    /**
-     * For netcdf-4, we need to convert compound user types
-     * to a template and then later re-instantiate as needed
-     * for each variable that is of the template type.
-     * Note that we do not use the Object#clone method
-     * because we have extra arguments.
-     *
-     * @param template
-     * @param vname
-     * @param factory
-     * @return
-     * @throws DapException
-     */
-    public DapStructure
-    cloneStructure(DapStructure template, String vname, DMRFactory factory)
-            throws DapException
-    {
-        if(vname == null)
-            vname = template.getShortName();
-        DapStructure dup;
-        if(template.getSort() == DapSort.STRUCTURE)
-            dup = factory.newStructure(vname);
-        else // template.getSort() == DapSort.SEQUENCE)
-            dup = factory.newSequence(vname);
-        // Duplicate annotation
-        Notes notes = (Notes) template.annotation();
-        if(notes != null)
-            dup.annotate(notes.clone());
-        // We do a deep clone
-        List<DapVariable> fields = template.getFields();
-        for(int i = 0; i < fields.size(); i++) {
-            DapVariable field = fields.get(i);
-            if(field.getSort() == DapSort.STRUCTURE
-                    || field.getSort() == DapSort.SEQUENCE) {
-                DapStructure dupfield = cloneStructure((DapStructure) field, null, factory);
-                dup.addField(dupfield);
-            } else {
-                DapAtomicVariable dupdav = cloneAtomicvar(fields.get(i), factory);
-                dup.addField(dupdav);
-            }
-        }
-        // Also reuse (but not duplicate) any structure level attributes
-        // That record type info
-        for(Map.Entry<String, DapAttribute> entry : dup.getAttributes().entrySet()) {
-            dup.addAttribute(entry.getValue());
-        }
-        return dup;
     }
 
 }

@@ -335,7 +335,7 @@ abstract public class DapController extends HttpServlet
         // Wrap the outputstream with a Chunk writer
         OutputStream out = drq.getOutputStream();
         ChunkWriter cw = new ChunkWriter(out, RequestMode.DMR, this.byteorder);
-        cw.writeDMR(sdmr);
+        cw.cacheDMR(sdmr);
         cw.close();
     }
 
@@ -383,7 +383,7 @@ abstract public class DapController extends HttpServlet
         OutputStream out = drq.getOutputStream();
         ChunkWriter cw = new ChunkWriter(out, RequestMode.DAP, this.byteorder);
         cw.setWriteLimit(getBinaryWriteLimit());
-        cw.writeDMR(sdmr);
+        cw.cacheDMR(sdmr);
         cw.flush();
 
         addCommonHeaders(drq);

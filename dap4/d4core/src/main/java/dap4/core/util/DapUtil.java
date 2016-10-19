@@ -258,20 +258,17 @@ abstract public class DapUtil // Should only contain static methods
     static public boolean
     checkFixedSize(DapVariable var)
     {
-        switch (var.getSort()) {
-        case ATOMICVARIABLE:
-            DapType dt = var.getBaseType();
-            return dt.isFixedSize();
-
-        case STRUCTURE:
-        case SEQUENCE:
-            for(DapVariable field : ((DapStructure) var).getFields()) {
+        DapType dt = var.getBaseType();
+        switch (dt.getTypeSort()) {
+        case Structure:
+        case Sequence:
+            for(DapVariable field : ((DapStructure) dt).getFields()) {
                 if(!checkFixedSize(field)) return false;
             }
             break;
 
         default:
-            break;
+            return dt.isFixedSize();
         }
         return true;
     }
@@ -342,8 +339,7 @@ abstract public class DapUtil // Should only contain static methods
             case DATASET:
             case GROUP:
                 break;
-            case ATOMICVARIABLE:
-            case STRUCTURE:
+            case VARIABLE:
                 structpath.add((DapVariable) node);
                 break;
             default:
@@ -409,9 +405,7 @@ abstract public class DapUtil // Should only contain static methods
         List<DapNode> nodes = dataset.getNodeList();
         for(DapNode node : nodes) {
             switch (node.getSort()) {
-            case ATOMICVARIABLE:
-            case STRUCTURE:
-            case SEQUENCE:
+            case VARIABLE:
                 u.put((DapVariable) node);
                 break;
             default:

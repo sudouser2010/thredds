@@ -9,6 +9,7 @@ import com.sun.jna.Pointer;
 import dap4.core.data.DataCursor;
 import dap4.core.dmr.*;
 import dap4.core.util.*;
+import dap4.dap4lib.LibTypeFcns;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -112,7 +113,7 @@ public class Nc4Cursor implements DataCursor
     {
         switch (this.scheme) {
         case ATOMIC:
-            return readAtomic(DapUtil.indexToSlices(index, (DapAtomicVariable) getTemplate()));
+            return readAtomic(DapUtil.indexToSlices(index, (DapVariable) getTemplate()));
         case STRUCTARRAY:
             return readStructure(index);
         case SEQARRAY:
@@ -130,7 +131,7 @@ public class Nc4Cursor implements DataCursor
         if(slices == null)
             throw new DapException("DataCursor.read: null set of slices");
         assert (this.scheme == scheme.ATOMIC);
-        DapAtomicVariable atomvar = (DapAtomicVariable) getTemplate();
+        DapVariable atomvar = (DapVariable) getTemplate();
         int rank = atomvar.getRank();
         assert slices != null && slices.size() == rank;
         // Get VarNotes and TypeNotes
@@ -159,7 +160,7 @@ public class Nc4Cursor implements DataCursor
     readAtomicScalar(VarNotes vi, TypeNotes ti)
             throws DapException
     {
-        DapAtomicVariable atomvar = (DapAtomicVariable) getTemplate();
+        DapVariable atomvar = (DapVariable) getTemplate();
         // Get into memory
         DapNetcdf nc4 = this.dsp.getJNI();
         int ret;
@@ -189,10 +190,12 @@ public class Nc4Cursor implements DataCursor
     readAtomicVector(VarNotes vi, TypeNotes ti, long count, List<Slice> slices)
             throws DapException
     {
-        DapAtomicVariable atomvar = (DapAtomicVariable) getTemplate();
+        DapVariable atomvar = (DapVariable) getTemplate();
         // Get into memory
         DapNetcdf nc4 = this.dsp.getJNI();
         DapType basetype = ti.getType();
+        if(atomvar.getCount() == 0)
+            return LibTypeFcns.newVector(basetype, 0);
         // Convert slices to (start,count,stride);
         int rank = atomvar.getRank();
         SizeT[] startp = new SizeT[rank];
@@ -231,14 +234,14 @@ public class Nc4Cursor implements DataCursor
     {
         assert (this.scheme == scheme.STRUCTARRAY);
         assert (index != null);
-        DapStructure template = (DapStructure) getTemplate();
+        DapVariable template = (DapVariable) getTemplate();
         long pos = index.index();
         if(pos < 0 || pos >= template.getCount())
             throw new IndexOutOfBoundsException("read: " + index);
         Pointer mem;
         VarNotes vi = (VarNotes) template.annotation();
         TypeNotes ti = vi.basetype;
-        DapStructure stvar = (DapStructure) template;
+        DapStructure sttype = (DapStructure)ti.getType();
         if(template.isTopLevel()) {
             int ret;
             mem = Mem.allocate(ti.compoundsize);
@@ -250,7 +253,7 @@ public class Nc4Cursor implements DataCursor
             // move to the appropriate offset
             mem = this.getMemory().share(pos * ti.compoundsize, ti.compoundsize);
         }
-        return new Nc4Cursor(Scheme.STRUCTURE, stvar, this.dsp)
+        return new Nc4Cursor(Scheme.STRUCTURE, template, this.dsp)
                 .setMemory(mem);
     }
 
@@ -259,8 +262,9 @@ public class Nc4Cursor implements DataCursor
             throws DapException
     {
         assert (this.scheme == scheme.RECORD || this.scheme == scheme.STRUCTURE);
-        DapStructure template = (DapStructure) getTemplate();
-        DapVariable field = template.getField(findex);
+        DapVariable template = (DapVariable) getTemplate();
+        DapStructure struct = (DapStructure)template.getBaseType();
+        DapVariable field = struct.getField(findex);
         // Get VarNotes and TypeNotes
         FieldNotes fi = (FieldNotes) field.annotation();
         long dimproduct = DapUtil.dimProduct(template.getDimensions());
@@ -458,7 +462,7 @@ public class Nc4Cursor implements DataCursor
     indexToSizes(Index index)
     {
         SizeT[] sizes = new SizeT[index.getRank()];
-        for(int i=0;i<sizes.length;i++) {
+        for(int i = 0; i < sizes.length; i++) {
             sizes[i] = new SizeT(index.get(i));
         }
         return sizes;

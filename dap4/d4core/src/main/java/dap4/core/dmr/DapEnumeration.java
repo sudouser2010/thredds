@@ -35,7 +35,7 @@ public class DapEnumeration extends DapType
 
     public DapEnumeration(String name)
     {
-        super(name);
+        super(name,TypeSort.Enum);
     }
 
     public DapEnumeration(String name, DapType basetype)

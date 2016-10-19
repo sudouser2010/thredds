@@ -110,7 +110,7 @@ CDMArrayStructure extends ArrayStructure implements CDMArray
         this.cdmroot = cdmroot;
         this.basetype = this.template.getBaseType();
         this.dimsize = DapUtil.dimProduct(template.getDimensions());
-        this.nmembers = ((DapStructure) template).getFields().size();
+        this.nmembers = ((DapStructure) template.getBaseType()).getFields().size();
 
         this.data = data;
 
@@ -173,7 +173,8 @@ CDMArrayStructure extends ArrayStructure implements CDMArray
     public String toString()
     {
         StringBuilder buf = new StringBuilder();
-        DapStructure struct = (DapStructure) this.template;
+        DapVariable var = (DapVariable) this.template;
+        DapStructure struct = (DapStructure) var.getBaseType();
         for(int i = 0; i < this.dimsize; i++) {
             List<DapVariable> fields = struct.getFields();
             if(i < (this.dimsize - 1))
@@ -507,11 +508,11 @@ CDMArrayStructure extends ArrayStructure implements CDMArray
                     sm.addMember(
                             field.getShortName(), "", null,
                             cdmtype,
-                            CDMUtil.computeEffectiveShape(ds.getDimensions()));
+                            CDMUtil.computeEffectiveShape(field.getDimensions()));
             m.setDataParam(i); // So we can index into various lists
             // recurse if this field is itself a structure
-            if(field.getSort() == DapSort.STRUCTURE) {
-                StructureMembers subsm = computemembers((DapStructure) field);
+            if(dt.getTypeSort().isStructType()) {
+                StructureMembers subsm = computemembers((DapStructure)dt);
                 m.setStructureMembers(subsm);
             }
         }
@@ -526,8 +527,9 @@ CDMArrayStructure extends ArrayStructure implements CDMArray
     protected Array
     memberArray(int recno, int memberindex)
     {
-        DapStructure template = (DapStructure) this.getTemplate();
-        DapVariable field = template.getField(memberindex);
+        DapVariable var = (DapVariable) this.getTemplate();
+        DapStructure struct = (DapStructure)var.getBaseType();
+        DapVariable field = struct.getField(memberindex);
         DapType base = field.getBaseType();
         if(base == null)
             throw new IllegalStateException("Unknown field type: " + field);

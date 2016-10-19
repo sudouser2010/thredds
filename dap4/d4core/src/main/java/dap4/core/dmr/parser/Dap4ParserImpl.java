@@ -109,8 +109,8 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
     getParentScope()
             throws DapException
     {
-        DapNode parent = searchScope(DapSort.STRUCTURE, DapSort.SEQUENCE, DapSort.GROUP, DapSort.DATASET);
-        if(parent == null) throw new DapException("Undefined parent Scope");
+        DapNode parent = searchScope(DapSort.VARIABLE, DapSort.GROUP, DapSort.DATASET);
+        if(parent == null) throw new DapException("Undefined parent scope");
         return parent;
     }
 
@@ -118,7 +118,7 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
     getVariableScope()
             throws DapException
     {
-        DapNode match = searchScope(DapSort.ATOMICVARIABLE, DapSort.STRUCTURE, DapSort.SEQUENCE);
+        DapNode match = searchScope(DapSort.VARIABLE);
         if(match == null)
             throw new ParseException("No enclosing variable scope");
         return (DapVariable) match;
@@ -157,12 +157,19 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
         case GROUP:
             var = ((DapGroup) parent).findVariable(name);
             break;
-        case STRUCTURE:
-            var = (DapVariable) ((DapStructure) parent).findByName(name);
-            break;
-        case SEQUENCE:
-            var = (DapVariable) ((DapSequence) parent).findByName(name);
-            break;
+        case VARIABLE:
+            DapVariable v = (DapVariable) parent;
+            DapType t = v.getBaseType();
+            switch (t.getTypeSort()) {
+            case Structure:
+                var = (DapVariable) ((DapStructure) t).findByName(name);
+                break;
+            case Sequence:
+                var = (DapVariable) ((DapSequence) t).findByName(name);
+                break;
+            default:
+                assert false : "Container cannot be atomic variable";
+            }
         default:
             break;
         }
@@ -647,7 +654,7 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
                 throw new ParseException("AtomicVariable: Illegal type: " + open.name);
             DapVariable var = null;
             // Do type substitutions
-            var = new DapAtomicVariable(name.value, basetype);
+            var = new DapVariable(name.value, basetype);
             // Look at the parent scope
             DapNode parent = scopestack.peek();
             if(parent == null)
@@ -657,11 +664,8 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             case GROUP:
                 ((DapGroup) parent).addDecl(var);
                 break;
-            case STRUCTURE:
-                ((DapStructure) parent).addField(var);
-                break;
-            case SEQUENCE:
-                ((DapSequence) parent).addField(var);
+            case VARIABLE:
+                addField((DapVariable) parent, var);
                 break;
             default:
                 assert false : "Atomic variable in illegal scope";
@@ -678,7 +682,7 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
         String typename = close.name;
         if("Byte".equals(typename)) typename = "UInt8"; // special case
         switch (sort) {
-        case ATOMICVARIABLE:
+        case VARIABLE:
             TypeSort atype = TypeSort.getTypeSort(typename);
             DapVariable var = (DapVariable) searchScope(sort);
             assert var != null;
@@ -688,12 +692,6 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             if(atype != vartype)
                 throw new ParseException(String.format("variable: open/close type mismatch: <%s> </%s>",
                         vartype, atype));
-            break;
-        case SEQUENCE:
-        case STRUCTURE:
-            if(!sort.getName().equalsIgnoreCase(typename))
-                throw new ParseException(String.format("variable: open/close type mismatch: <%s> </%s>",
-                        typename, sort.getName()));
             break;
         default:
             throw new ParseException("Variable: Illegal type: " + typename);
@@ -710,7 +708,7 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
     leaveatomicvariable(SaxEvent close)
             throws ParseException
     {
-        openclosematch(close, DapSort.ATOMICVARIABLE);
+        openclosematch(close, DapSort.VARIABLE);
         leavevariable();
     }
 
@@ -731,7 +729,7 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             if(target == null)
                 throw new ParseException("EnumVariable: no such enum: " + name.value);
             DapVariable var = null;
-            var = new DapAtomicVariable(name.value, target);
+            var = new DapVariable(name.value, target);
             // Look at the parent scope
             DapNode parent = scopestack.peek();
             if(parent == null)
@@ -741,11 +739,8 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             case GROUP:
                 ((DapGroup) parent).addDecl(var);
                 break;
-            case STRUCTURE:
-                ((DapStructure) parent).addField(var);
-                break;
-            case SEQUENCE:
-                ((DapSequence) parent).addField(var);
+            case VARIABLE:
+                addField((DapVariable) parent, var);
                 break;
             default:
                 assert false : "Atomic variable in illegal scope";
@@ -762,7 +757,7 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             throws ParseException
     {
         if(debug) report("leaveenumvariable");
-        openclosematch(close, DapSort.ATOMICVARIABLE);
+        openclosematch(close, DapSort.VARIABLE);
         leavevariable();
     }
 
@@ -774,9 +769,9 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
         if(debug) report("entermap");
         if(isempty(name))
             throw new ParseException("Mapref: Empty map name");
-        DapAtomicVariable var;
+        DapVariable var;
         try {
-            var = (DapAtomicVariable) root.findByFQN(name.value, DapSort.ATOMICVARIABLE);
+            var = (DapVariable) root.findByFQN(name.value, DapSort.VARIABLE);
         } catch (DapException de) {
             throw new ParseException(de);
         }
@@ -798,7 +793,7 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
         DapMap map = new DapMap(var);
         try {
             // Pull the top variable scope
-            DapVariable parent = (DapVariable) searchScope(DapSort.ATOMICVARIABLE, DapSort.STRUCTURE, DapSort.SEQUENCE);
+            DapVariable parent = (DapVariable) searchScope(DapSort.VARIABLE);
             if(parent == null)
                 throw new ParseException("Variable has no parent: " + var);
             parent.addMap(map);
@@ -826,8 +821,10 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
         if(isempty(name))
             throw new ParseException("Structure: Empty structure name");
         try {
-            DapStructure var = null;
-            var = new DapStructure(name.value);
+            DapStructure type = null;
+            DapVariable var = null;
+            type = new DapStructure(name.value);
+            var = new DapVariable(name.value, type);
             // Look at the parent scope
             DapNode parent = scopestack.peek();
             if(parent == null)
@@ -837,9 +834,8 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             case GROUP:
                 ((DapGroup) parent).addDecl(var);
                 break;
-            case STRUCTURE:
-            case SEQUENCE:
-                ((DapStructure) parent).addField(var);
+            case VARIABLE:
+                addField((DapVariable) parent, var);
                 break;
             default:
                 assert false : "Structure variable in illegal scope";
@@ -856,7 +852,7 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             throws ParseException
     {
         if(debug) report("leavestructurevariable");
-        openclosematch(close, DapSort.STRUCTURE);
+        openclosematch(close, DapSort.VARIABLE);
         leavevariable();
     }
 
@@ -870,7 +866,9 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             throw new ParseException("Sequence: Empty sequence name");
         try {
             DapVariable var = null;
-            var = new DapSequence(name.value);
+            DapType type = null;
+            type = new DapSequence(name.value);
+            var = new DapVariable(name.value, type);
             // Look at the parent scope
             DapNode parent = scopestack.peek();
             if(parent == null)
@@ -880,11 +878,8 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             case GROUP:
                 ((DapGroup) parent).addDecl(var);
                 break;
-            case STRUCTURE:
-                ((DapStructure) parent).addField(var);
-                break;
-            case SEQUENCE:
-                ((DapSequence) parent).addField(var);
+            case VARIABLE:
+                addField((DapVariable) parent, var);
                 break;
             default:
                 assert false : "Structure variable in illegal scope";
@@ -901,7 +896,7 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             throws ParseException
     {
         if(debug) report("leavesequencevariable");
-        openclosematch(close, DapSort.SEQUENCE);
+        openclosematch(close, DapSort.VARIABLE);
         leavevariable();
     }
 
@@ -1138,6 +1133,23 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
 
     //////////////////////////////////////////////////
     // Utilities
+
+    void
+    addField(DapVariable instance, DapVariable field)
+            throws DapException
+    {
+        DapType t = instance.getBaseType();
+        switch (t.getTypeSort()) {
+        case Structure:
+        case Sequence:
+            ((DapStructure) t).addField(field);
+            field.setParent(instance);
+            break;
+        default:
+            assert false : "Container cannot be atomic variable";
+        }
+    }
+
 
     void report(String action)
     {

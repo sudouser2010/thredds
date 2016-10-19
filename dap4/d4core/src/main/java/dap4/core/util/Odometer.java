@@ -113,7 +113,7 @@ public class Odometer implements Iterator<Index>
                 this.dimset[i] = dim;
             }
         for(int i = 0; i < this.rank; i++) {
-            this.index.dimsizes[i] = slices[i].getMaxSize();
+            this.index.dimsizes[i] = slices[i].getMax();
         }
         reset();
     }

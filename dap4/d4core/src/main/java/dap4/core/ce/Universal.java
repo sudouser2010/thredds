@@ -84,9 +84,7 @@ public class Universal extends CEConstraint
         switch (node.getSort()) {
         case DIMENSION:
         case ENUMERATION:
-        case ATOMICVARIABLE:
-        case SEQUENCE:
-        case STRUCTURE:
+        case VARIABLE:
         case GROUP:
         case DATASET:
             return true;

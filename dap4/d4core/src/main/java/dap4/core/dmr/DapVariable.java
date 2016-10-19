@@ -11,11 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class is a utility to unify
- * the structured and atomic typed variables.
+ * This class represents any variable or field.
  */
 
-abstract public class DapVariable extends DapNode implements DapDecl
+public class DapVariable extends DapNode implements DapDecl
 {
 
     //////////////////////////////////////////////////
@@ -39,6 +38,12 @@ abstract public class DapVariable extends DapNode implements DapDecl
         super(name);
     }
 
+    public DapVariable(String name, DapType basetype)
+    {
+        super(name);
+        setBaseType(basetype);
+    }
+
     //////////////////////////////////////////////////
     // Accessors
 
@@ -46,6 +51,13 @@ abstract public class DapVariable extends DapNode implements DapDecl
     getBaseType()
     {
         return this.basetype;
+    }
+
+    public DapVariable
+    setBaseType(DapType t)
+    {
+        this.basetype = t;
+        return this;
     }
 
     public int getRank()
@@ -66,20 +78,14 @@ abstract public class DapVariable extends DapNode implements DapDecl
     public DapDimension getDimension(int i)
     {
         if(this.dimensions == null
-            || i < 0 || i >= this.dimensions.size())
-            throw new IllegalArgumentException("Illegal index: "+i);
+                || i < 0 || i >= this.dimensions.size())
+            throw new IllegalArgumentException("Illegal index: " + i);
         return this.dimensions.get(i);
     }
 
     public void addDimension(DapDimension node)
-        throws DapException
+            throws DapException
     {
-        // Enforce rulel that a Variable length dimension
-        // must be last
-        for(DapDimension d : dimensions) {
-            if(d.isVariableLength())
-                throw new DapException("Variable length dimension must always be last");
-        }
         dimensions.add(node);
     }
 
@@ -89,7 +95,7 @@ abstract public class DapVariable extends DapNode implements DapDecl
     }
 
     public void addMap(DapMap map)
-        throws DapException
+            throws DapException
     {
         if(maps.contains(map))
             throw new DapException("Duplicate map variables: " + map.getFQN());
@@ -114,7 +120,7 @@ abstract public class DapVariable extends DapNode implements DapDecl
     {
         StringBuilder s = new StringBuilder();
         s.append(super.toString());
-        for(int i = 0;i < getRank();i++) {
+        for(int i = 0; i < getRank(); i++) {
             DapDimension dim = dimensions.get(i);
             if(dim == null) // should never happen
                 s.append("(null)");
@@ -124,7 +130,44 @@ abstract public class DapVariable extends DapNode implements DapDecl
         return s.toString();
     }
 
-    abstract public boolean isLeaf();
+    public DapType getTrueBaseType()
+    {
+        DapType bt = getBaseType();
+        if(bt.getTypeSort() == TypeSort.Enum)
+            return ((DapEnumeration) bt).getBaseType();
+        else
+            return bt;
+    }
+
+    public boolean isLeaf()
+    {
+        return (this.isAtomic());
+    }
+
+    // convenience
+    public boolean
+    isAtomic()
+    {
+        return (getBaseType() == null ? false : getBaseType().getTypeSort().isAtomic());
+    }
+
+    public boolean
+    isEnum()
+    {
+        return (getBaseType() == null ? false : getBaseType().getTypeSort().isEnumType());
+    }
+
+    public boolean
+    isSequence()
+    {
+        return (getBaseType() == null ? false : getBaseType().getTypeSort().isSeqType());
+    }
+
+    public boolean
+    isStructure()
+    {
+        return (getBaseType() == null ? false : getBaseType().getTypeSort().isStructType());
+    }
 
 } // class DapVariable
 

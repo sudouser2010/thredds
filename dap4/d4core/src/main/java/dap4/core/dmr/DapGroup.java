@@ -112,9 +112,11 @@ public class DapGroup extends DapNode implements DapDecl
         case ENUMERATION:
             enums.add((DapEnumeration) newdecl);
             break;
-        case ATOMICVARIABLE:
+        case ATOMICTYPE:
         case STRUCTURE:
         case SEQUENCE:
+	     break; // do nothing
+	case VARIABLE:
             variables.add((DapVariable) newdecl);
             break;
         case GROUP:
@@ -194,28 +196,12 @@ public class DapGroup extends DapNode implements DapDecl
                         return x;
                 }
                 break;
-            case ATOMICVARIABLE:
+            case VARIABLE:
                 for(DapVariable x : variables) {
                     if(x.getSort() != sort)
                         continue;
                     if(x.getShortName().equals(name))
                         return x;
-                }
-                break;
-            case STRUCTURE:
-                for(DapVariable x : variables) {
-                    if(x.getSort() != sort)
-                        continue;
-                    if(x.getShortName().equals(name))
-                        return x;
-                }
-                break;
-            case SEQUENCE:
-                for(DapVariable x : variables) {
-                    if(x.getSort() != sort)
-                        continue;
-                    if(x.getShortName().equals(name))
-                        return (x);
                 }
                 break;
             case GROUP:
@@ -264,9 +250,7 @@ public class DapGroup extends DapNode implements DapDecl
     public DapVariable
     findVariable(String name)
     {
-        DapNode var = findInGroup(name, DapSort.ATOMICVARIABLE);
-        if(var == null)
-            var = findInGroup(name, DapSort.STRUCTURE);
+        DapNode var = findInGroup(name, DapSort.VARIABLE);
         return (DapVariable) var;
     }
 
