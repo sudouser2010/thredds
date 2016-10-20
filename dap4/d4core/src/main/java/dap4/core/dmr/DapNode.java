@@ -336,14 +336,15 @@ abstract public class DapNode
     public String getFQN()
     {
         if(this.fqn == null)
-            this.fqn = computefqn(null);
+                this.fqn = computefqn(null);
         assert (fqn.length() > 0 || this.getSort() == DapSort.DATASET);
         return this.fqn;
     }
 
     /**
-     * Compute the path upto some specified containing node (null=>root)
-     * The containing node is included as is this node
+     * Compute the path upto, and including
+     * some specified containing node (null=>root)
+     * The containing node is included as is this node.
      *
      * @return ordered list of parent nodes
      */
@@ -357,10 +358,9 @@ abstract public class DapNode
             path.add(0, current);
             if(wrt != null && current == wrt)
                 break;
-            DapNode up = current.getParent();
-            if(up == null)
+            current = current.getParent();
+            if(current == null)
                 break;
-            current = up;
         }
         return path;
     }
@@ -432,7 +432,7 @@ abstract public class DapNode
         DapNode parent = path.get(0);
         if(wrt != null)
             fqn.append(wrt.getFQN());
-        for(int i = 1; i < path.size(); i++) {// start past the root dataset
+        for(int i = 1; i < path.size(); i++) {   // start at 1 to skip root
             DapNode current = path.get(i);
             // Depending on what parent is, use different delimiters
             switch (parent.getSort()) {

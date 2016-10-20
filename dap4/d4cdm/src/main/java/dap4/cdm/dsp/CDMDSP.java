@@ -647,6 +647,7 @@ public class CDMDSP extends AbstractDSP
         DapStructure struct = (DapStructure) dmrfactory.newStructure(cdmvar.getShortName()).annotate(cdmvar);
         DapVariable dapvar = (DapVariable) dmrfactory.newVariable(cdmvar.getShortName(), struct).annotate(cdmvar);
         recordNode(cdmvar, dapvar);
+        getDMR().addDecl(struct);
         // We need to build the field variables
         Structure structvar = (Structure) cdmvar;
         for(CDMNode node : structvar.getVariables()) {
@@ -675,6 +676,7 @@ public class CDMDSP extends AbstractDSP
         DapSequence seq = (DapSequence) dmrfactory.newSequence(cdmvar.getShortName()).annotate(cdmvar);
         DapVariable var = (DapVariable) dmrfactory.newVariable(cdmvar.getShortName(), seq).annotate(cdmvar);
         recordNode(cdmvar, seq);
+        getDMR().addDecl(seq);
         // We need to build the sequence field from cdmvar
         // But dimensionless and as fields of the sequence.
         Sequence seqvar = (Sequence) cdmvar;

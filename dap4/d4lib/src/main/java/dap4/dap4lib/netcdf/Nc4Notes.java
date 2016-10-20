@@ -165,8 +165,19 @@ abstract public class Nc4Notes
         public DapType getType()
         {
             DapSort sort = this.node.getSort();
-            return (sort == DapSort.VARIABLE ? ((DapVariable)this.node).getBaseType()
-                                             : null);
+            switch (sort) {
+            case ATOMICTYPE:
+            case STRUCTURE:
+            case SEQUENCE:
+                return (DapType) this.node;
+            case ENUMERATION:
+                return ((DapEnumeration) this.node);
+            case VARIABLE:
+                return ((DapVariable) this.node).getBaseType();
+            default:
+                break;
+            }
+            return null;
         }
 
         public TypeNotes setOpaque(int len)

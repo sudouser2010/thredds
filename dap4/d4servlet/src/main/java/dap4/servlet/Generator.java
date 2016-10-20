@@ -192,7 +192,7 @@ public class Generator extends DapSerializer
             throws DapException
     {
         writer.startVariable();
-        if(dapvar.isAtomic() || dapvar.isEnum())
+        if(dapvar.isAtomic())
             atomicVariable(dapvar);
         else if(dapvar.isStructure())
             structureVariable(dapvar);

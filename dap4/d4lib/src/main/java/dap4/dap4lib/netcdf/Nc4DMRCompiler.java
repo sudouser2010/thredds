@@ -407,7 +407,7 @@ public class Nc4DMRCompiler
             var.addAttribute(sizetag);
         }
         // If struct or sequence, make var the parent of the fields
-        if(!var.isAtomic()) {
+        if(var.isCompound()) {
             DapStructure ds = (DapStructure)var.getBaseType();
             for(DapVariable field: ds.getFields())
                 field.setParent(var);

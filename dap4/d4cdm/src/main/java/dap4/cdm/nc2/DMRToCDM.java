@@ -150,7 +150,7 @@ public class DMRToCDM
             throws DapException
     {
         Variable cdmvar = null;
-	DapType basetype = dapvar.getBaseType();
+	    DapType basetype = dapvar.getBaseType();
         if(basetype.isAtomic()) {
             DapVariable atomvar = (DapVariable) dapvar;
             cdmvar = new Variable(ncfile,

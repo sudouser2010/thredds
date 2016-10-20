@@ -85,7 +85,7 @@ public class CECompiler
             throws DapException
     {
         DapVariable var = compilesegment(ast.projection);
-        if(var.getSort() != DapSort.SEQUENCE)
+        if(!var.isSequence())
             throw new DapException("Attempt to apply a filter to a non-sequence variable: " + var.getFQN());
         // Convert field references in the filter
         // and canonicalize the comparisons

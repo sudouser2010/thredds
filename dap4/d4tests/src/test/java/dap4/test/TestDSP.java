@@ -224,8 +224,8 @@ public class TestDSP extends DapTestCommon
     void
     chooseTestcases()
     {
-        if(false) {
-            chosentests = locate("file:", "test_atomic_array.nc.raw");
+        if(true) {
+            chosentests = locate("file:", "test_struct_array.nc");
             prop_visual = true;
             prop_baseline = false;
         } else {

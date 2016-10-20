@@ -175,7 +175,7 @@ public class DSPPrinter
             printer.marginPrint("{");
             printer.eol();
             printer.indent();
-            printNonAtomic(data);
+            printCompoundInstance(data);
             printer.outdent();
             printer.marginPrint("}");
             printer.eol();
@@ -206,15 +206,15 @@ public class DSPPrinter
             break;
         case STRUCTARRAY:
         case SEQARRAY:
-            DapStructure ds = (DapStructure) data.getTemplate();
+            DapStructure ds = (DapStructure) ((DapVariable) data.getTemplate()).getBaseType();
             while(odom.hasNext()) {
                 Index pos = odom.next();
                 String s = indicesToString(pos);
                 printer.marginPrint(ds.getFQN() + s + " = {");
                 printer.eol();
                 printer.indent();
-                DataCursor instance = (DataCursor)data.read(pos);
-                printNonAtomic(instance);
+                DataCursor instance = (DataCursor) data.read(pos);
+                printCompoundInstance(instance);
                 printer.outdent();
                 printer.marginPrint("}");
                 printer.eol();
@@ -233,7 +233,10 @@ public class DSPPrinter
         Object values = data.read(slices);
         DapVariable atom = (DapVariable) data.getTemplate();
         String name = atom.getFQN();
-        for(int i = 0; odom.hasNext(); i++) {
+        if(Array.getLength(values) == 0) {// zero length case
+            printer.marginPrint(name + " = <empty>");
+            printer.eol();
+        } else for(int i = 0; odom.hasNext(); i++) {
             Index index = odom.next();
             String prefix = (odom.rank() == 0 ? name : name + indicesToString(index));
             printer.marginPrint(prefix + " = ");
@@ -253,14 +256,20 @@ public class DSPPrinter
         printer.eol();
     }
 
+    /**
+     * Print a single structure or sequence or record instance
+     *
+     * @param datav
+     * @throws DapException
+     */
     protected void
-    printNonAtomic(DataCursor datav)
+    printCompoundInstance(DataCursor datav)
             throws DapException
     {
         switch (datav.getScheme()) {
         case STRUCTURE:
         case RECORD:
-            DapStructure dstruct = (DapStructure) datav.getTemplate();
+            DapStructure dstruct = (DapStructure) ((DapVariable) datav.getTemplate()).getBaseType();
             List<DapVariable> dfields = dstruct.getFields();
             for(int f = 0; f < dfields.size(); f++) {
                 DataCursor df = datav.getField(f);
@@ -269,7 +278,7 @@ public class DSPPrinter
             break;
 
         case SEQUENCE:
-            DapSequence dseq = (DapSequence) datav.getTemplate();
+            DapSequence dseq = (DapSequence) ((DapVariable) datav.getTemplate()).getBaseType();
             dfields = dseq.getFields();
             long count = datav.getRecordCount();
             for(long r = 0; r < count; r++) {
@@ -277,7 +286,7 @@ public class DSPPrinter
                 printer.marginPrint("[");
                 printer.eol();
                 printer.indent();
-                printVariable(dr);
+                printCompoundInstance(dr);
                 printer.outdent();
                 printer.marginPrint("]");
             }

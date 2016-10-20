@@ -39,6 +39,7 @@ public class DapDataset extends DapGroup
     protected List<DapVariable> allvariables = null;
     protected List<DapGroup> allgroups = null;
     protected List<DapEnumeration> allenums = null;
+    protected List<DapStructure> allcompounds = null;
     protected List<DapDimension> alldimensions = null;
 
     protected boolean finished = false;
@@ -79,6 +80,7 @@ public class DapDataset extends DapGroup
         this.allvariables = new ArrayList<DapVariable>();
         this.allgroups = new ArrayList<DapGroup>();
         this.allenums = new ArrayList<DapEnumeration>();
+        this.allcompounds = new ArrayList<DapStructure>();
         this.alldimensions = new ArrayList<DapDimension>();
         finishR(this);
     }
@@ -98,6 +100,10 @@ public class DapDataset extends DapGroup
             break;
         case ENUMERATION:
             this.allenums.add((DapEnumeration) node);
+            break;
+        case SEQUENCE:
+        case STRUCTURE:
+            this.allcompounds.add((DapStructure)node);
             break;
         case VARIABLE:
             if(node.isTopLevel())
@@ -302,22 +308,22 @@ public class DapDataset extends DapGroup
             return current.findInGroup(outer, sortset);
         } else {// It is apparently a structure field
             // locate the outermost structure to start with
-            DapStructure currentstruct = (DapStructure) current.findInGroup(outer, DapSort.STRUCTURE);
+            DapStructure currentstruct = (DapStructure) current.findInGroup(outer, DapSort.STRUCTURE,DapSort.SEQUENCE);
             if(currentstruct == null)
                 return null; // does not exist
             // search for the innermost structure
             String fieldname;
             for(int i = 1; i < structpath.size() - 1; i++) {
                 fieldname = Escape.backslashUnescape(structpath.get(i));
-                DapNode field = currentstruct.findByName(fieldname);
+                DapVariable field = (DapVariable)currentstruct.findByName(fieldname);
                 if(field == null)
                     throw new DapException("No such field: " + fieldname);
-                if(field.getSort() != DapSort.STRUCTURE)
+                if(!field.isCompound())
                     break;
-                currentstruct = (DapStructure) field;
+                currentstruct = (DapStructure) field.getBaseType();
             }
             fieldname = Escape.backslashUnescape(structpath.get(structpath.size() - 1));
-            DapNode field = currentstruct.findByName(fieldname);
+            DapVariable field = currentstruct.findByName(fieldname);
             if(field == null)
                 throw new DapException("No such field: " + fieldname);
             if(field.getSort().oneof(sortset))

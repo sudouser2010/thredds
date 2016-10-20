@@ -169,5 +169,11 @@ public class DapVariable extends DapNode implements DapDecl
         return (getBaseType() == null ? false : getBaseType().getTypeSort().isStructType());
     }
 
+    public boolean
+    isCompound()
+    {
+        return (isStructure() || isSequence());
+    }
+
 } // class DapVariable
 

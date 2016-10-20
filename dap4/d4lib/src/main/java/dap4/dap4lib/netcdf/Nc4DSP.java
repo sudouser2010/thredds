@@ -207,7 +207,7 @@ public class Nc4DSP extends AbstractDSP
                 vardata = new Nc4Cursor(scheme, var, this);
                 break;
             default:
-                if(!type.getTypeSort().isAtomic())
+                if(!type.isAtomic())
                     throw new DapException("Unexpected cursor type: " + type);
                 vardata = new Nc4Cursor(DataCursor.Scheme.ATOMIC, var, this);
                 break;

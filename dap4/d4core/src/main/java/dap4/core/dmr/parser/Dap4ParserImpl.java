@@ -833,9 +833,11 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             case DATASET:
             case GROUP:
                 ((DapGroup) parent).addDecl(var);
+                var.getGroup().addDecl(type);
                 break;
             case VARIABLE:
                 addField((DapVariable) parent, var);
+                var.getGroup().addDecl(type);
                 break;
             default:
                 assert false : "Structure variable in illegal scope";
@@ -877,9 +879,11 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
             case DATASET:
             case GROUP:
                 ((DapGroup) parent).addDecl(var);
+                var.getGroup().addDecl(type);
                 break;
             case VARIABLE:
                 addField((DapVariable) parent, var);
+                var.getGroup().addDecl(type);
                 break;
             default:
                 assert false : "Structure variable in illegal scope";
@@ -1144,6 +1148,7 @@ public class Dap4ParserImpl extends Dap4BisonParser implements Dap4Parser
         case Sequence:
             ((DapStructure) t).addField(field);
             field.setParent(instance);
+            t.setParent(instance.getGroup());
             break;
         default:
             assert false : "Container cannot be atomic variable";

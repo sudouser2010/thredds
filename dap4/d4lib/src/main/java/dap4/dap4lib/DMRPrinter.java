@@ -217,7 +217,7 @@ public class DMRPrinter
             DapType type = var.getBaseType();
             printer.marginPrint("<" + type.getTypeSort().name());
             printXMLAttributes(node, ce, NILFLAGS);
-            if(type.isAtomic()|| type.isEnumType()) {
+            if(type.isAtomic()) {
                 if((hasMetadata(node) || hasDimensions(var) || hasMaps(var))) {
                     printer.println(">");
                     printer.indent();

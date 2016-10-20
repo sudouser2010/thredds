@@ -1,10 +1,15 @@
 <Dataset
-         name="test_one_var.nc"
+         name="test_atomic_array.nc"
          dapVersion="4.0"
          dmrVersion="1.0"
          xmlns="http://xml.opendap.org/ns/DAP/4.0#"
          xmlns:dap="http://xml.opendap.org/ns/DAP/4.0#">
-    <Int32 name="t"/>
+
+    <Int16 name="v16">
+        <Dim size="3"/>
+    </Int16>
 </Dataset>
-/t = 17
+/v16[0] = 1
+/v16[1] = 2
+/v16[2] = 4
 

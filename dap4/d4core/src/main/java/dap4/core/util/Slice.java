@@ -103,7 +103,7 @@ public class Slice
     public Slice(long first, long stop, long stride)
             throws DapException
     {
-        this(first, stop, stride, (stop == UNDEFINED ? UNDEFINED : (stop - first)));
+        this(first, stop, stride, UNDEFINED);
     }
 
     public Slice(long first, long stop, long stride, long maxsize)
@@ -319,7 +319,6 @@ public class Slice
             buf.append(String.format("%d:%d", this.first, this.stop - 1));
         else
             buf.append(String.format("%d:%d:%d", this.first, this.stride, this.stop - 1));
-        buf.append(String.format("|%d", (this.stop - this.first)));
         buf.append(String.format("|%d", (this.stop - this.first)));
         if(withbrackets)
             buf.append("]");

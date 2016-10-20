@@ -52,7 +52,7 @@ public enum TypeSort
     String("String", ISSTRING | ISLEGALATTRTYPE | ISATOMIC),
     URL("URL", ISSTRING | ISLEGALATTRTYPE | ISATOMIC),
     Opaque("Opaque", ISOPAQUE | ISLEGALATTRTYPE | ISATOMIC),
-    Enum("Enum", ISENUM | ISFIXEDSIZE | ISLEGALATTRTYPE),
+    Enum("Enum", ISENUM | ISATOMIC | ISFIXEDSIZE | ISLEGALATTRTYPE),
     Structure("Structure", ISSTRUCT|ISCOMPOUND), // Add this to avoid having to check the DapSort
     Sequence("Sequence", ISSEQ|ISCOMPOUND); // Add this to avoid having to check the DapSort
 

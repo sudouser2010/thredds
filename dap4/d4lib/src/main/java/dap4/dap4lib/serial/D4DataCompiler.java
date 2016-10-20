@@ -98,7 +98,7 @@ public class D4DataCompiler
         boolean isscalar = dapvar.getRank() == 0;
         D4Cursor array = null;
         DapType type = dapvar.getBaseType();
-        if(type.isAtomic() || type.isEnumType())
+        if(type.isAtomic())
             array = compileAtomicVar(dapvar, container);
         else if(type.isStructType()) {
             if(isscalar)
