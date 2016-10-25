@@ -3,9 +3,10 @@ netcdf test_utf8.nc.raw {
     d2 = 2;
   variables:
     String vs(d2);
-      vs:_DAP4_Checksum_CRC32 = "0x20c1e2f3";
+      vs:_DAP4_Checksum_CRC32 = "0xc0811233";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
 }
 netcdf test_utf8.nc.raw {
@@ -13,9 +14,10 @@ netcdf test_utf8.nc.raw {
     d2 = 2;
   variables:
     String vs(d2);
-      vs:_DAP4_Checksum_CRC32 = "0x20c1e2f3";
+      vs:_DAP4_Checksum_CRC32 = "0xc0811233";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
  data:
 vs =  "Καλημέα",   "Καλημέα"

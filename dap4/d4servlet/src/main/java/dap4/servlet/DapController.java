@@ -7,12 +7,11 @@ package dap4.servlet;
 
 import dap4.core.ce.CEConstraint;
 import dap4.core.data.DSP;
+import dap4.core.dmr.DapAttribute;
 import dap4.core.dmr.DapDataset;
+import dap4.core.dmr.DapType;
 import dap4.core.dmr.ErrorResponse;
-import dap4.core.util.DapContext;
-import dap4.core.util.DapException;
-import dap4.core.util.DapUtil;
-import dap4.core.util.ResponseFormat;
+import dap4.core.util.*;
 import dap4.dap4lib.*;
 
 import javax.servlet.ServletContext;
@@ -34,9 +33,10 @@ abstract public class DapController extends HttpServlet
     //////////////////////////////////////////////////
     // Constants
 
-    static public final boolean DEBUG = false;
+    static public boolean DEBUG = false;
+    static public boolean DUMPDATA = false;
 
-    static public final boolean PARSEDEBUG = false;
+    static public boolean PARSEDEBUG = false;
 
     static protected final String BIG_ENDIAN = "Big-Endian";
     static protected final String LITTLE_ENDIAN = "Little-Endian";
@@ -86,8 +86,6 @@ abstract public class DapController extends HttpServlet
 
     protected boolean compress = true;
 
-    transient protected ByteOrder byteorder = ByteOrder.nativeOrder();
-
     transient protected DapDSR dsrbuilder = new DapDSR();
 
 
@@ -106,6 +104,7 @@ abstract public class DapController extends HttpServlet
 
     public DapController()
     {
+        ChunkWriter.DUMPDATA = DUMPDATA; // pass it on
     }
 
     //////////////////////////////////////////////////////////
@@ -286,7 +285,7 @@ abstract public class DapController extends HttpServlet
             OutputStream out = drq.getOutputStream();
             addCommonHeaders(drq);// Add relevant headers
             // Wrap the outputstream with a Chunk writer
-            ChunkWriter cw = new ChunkWriter(out, RequestMode.DSR, this.byteorder);
+            ChunkWriter cw = new ChunkWriter(out, RequestMode.DSR, drq.getByteOrder());
             cw.writeDSR(dsr);
             cw.close();
         } catch (IOException ioe) {
@@ -311,6 +310,9 @@ abstract public class DapController extends HttpServlet
         DSP dsp = DapCache.open(realpath, cxt);
         DapDataset dmr = dsp.getDMR();
 
+        /* Annotate with our endianness */
+        addEndianness(dmr,drq);
+
         // Process any constraint view
         CEConstraint ce = null;
         String sce = drq.queryLookup(DapProtocol.CONSTRAINTTAG);
@@ -321,7 +323,7 @@ abstract public class DapController extends HttpServlet
         PrintWriter pw = new PrintWriter(sw);
 
         // Get the DMR as a string
-        DMRPrinter dapprinter = new DMRPrinter(dmr,ce,pw);
+        DMRPrinter dapprinter = new DMRPrinter(dmr, ce, pw, drq.getFormat());
         dapprinter.print();
         pw.close();
         sw.close();
@@ -334,7 +336,7 @@ abstract public class DapController extends HttpServlet
 
         // Wrap the outputstream with a Chunk writer
         OutputStream out = drq.getOutputStream();
-        ChunkWriter cw = new ChunkWriter(out, RequestMode.DMR, this.byteorder);
+        ChunkWriter cw = new ChunkWriter(out, RequestMode.DMR, drq.getByteOrder());
         cw.cacheDMR(sdmr);
         cw.close();
     }
@@ -361,6 +363,9 @@ abstract public class DapController extends HttpServlet
             throw new IOException("No such file: " + drq.getResourcePath());
         DapDataset dmr = dsp.getDMR();
 
+        /* Annotate with our endianness */
+        addEndianness(dmr,drq);
+
         // Process any constraint
         CEConstraint ce = null;
         String sce = drq.queryLookup(DapProtocol.CONSTRAINTTAG);
@@ -370,7 +375,7 @@ abstract public class DapController extends HttpServlet
         PrintWriter pw = new PrintWriter(sw);
 
         // Get the DMR as a string
-        DMRPrinter dapprinter = new DMRPrinter(dmr,ce,pw);
+        DMRPrinter dapprinter = new DMRPrinter(dmr, ce, pw, drq.getFormat());
         dapprinter.print();
         pw.close();
         sw.close();
@@ -381,7 +386,7 @@ abstract public class DapController extends HttpServlet
 
         // Wrap the outputstream with a Chunk writer
         OutputStream out = drq.getOutputStream();
-        ChunkWriter cw = new ChunkWriter(out, RequestMode.DAP, this.byteorder);
+        ChunkWriter cw = new ChunkWriter(out, RequestMode.DAP, drq.getByteOrder());
         cw.setWriteLimit(getBinaryWriteLimit());
         cw.cacheDMR(sdmr);
         cw.flush();
@@ -402,11 +407,17 @@ abstract public class DapController extends HttpServlet
                 */
         case NONE:
         default:
-            DapSerializer writer = new DapSerializer(dsp, ce, cw, byteorder);
+            DapSerializer writer = new DapSerializer(dsp, ce, cw, drq.getByteOrder());
             writer.write(dsp.getDMR());
             cw.flush();
             cw.close();
             break;
+        }
+        // Should we dump data?
+        if(DUMPDATA) {
+            byte[] data = cw.getDump();
+            if(data != null)
+                DapDump.dumpbytestream(data, cw.getWriteOrder(), "ChunkWriter.write");
         }
     }
 
@@ -495,6 +506,19 @@ abstract public class DapController extends HttpServlet
         drq.getResponse().sendError(httpcode, errormsg);
     }
 
+    void
+    addEndianness(DapDataset dmr, DapRequest drq)
+            throws DapException
+    {
+        DapAttribute a = dmr.findAttribute(DapUtil.LITTLEENDIANATTRNAME);
+        if(a == null) {
+            a = new DapAttribute(DapUtil.LITTLEENDIANATTRNAME, DapType.UINT8);
+            ByteOrder order = drq.getByteOrder();
+            Integer oz = (order == ByteOrder.BIG_ENDIAN ? 0 : 1);
+            a.setValues(new Integer[]{oz});
+            dmr.addAttribute(a);
+        }
+    }
 }
 
 

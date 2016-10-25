@@ -23,7 +23,7 @@ import java.util.List;
 
 public class TestParserDMR extends DapTestCommon
 {
-    static final boolean PARSEDEBUG = true;
+    static final boolean PARSEDEBUG = false;
 
     // Do a special test to compare the dmr parser print output
     // to the original input. This will often fail in non-essential

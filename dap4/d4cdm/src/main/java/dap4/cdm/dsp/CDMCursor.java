@@ -179,7 +179,7 @@ public class CDMCursor implements DataCursor
     {
         assert (index != null);
         DapVariable var = (DapVariable) getTemplate();
-        DapStructure template = (DapStructure) var.getBaseType();
+        DapStructure type = (DapStructure) var.getBaseType();
         long pos = index.index();
         if(pos < 0 || pos > var.getCount())
             throw new IndexOutOfBoundsException("read: " + index);
@@ -193,7 +193,7 @@ public class CDMCursor implements DataCursor
         } else {
             assert (this.scheme == scheme.STRUCTARRAY);
             data = sarray.getStructureData((int) pos);
-            instance = new CDMCursor(Scheme.STRUCTURE, template, this.dsp)
+            instance = new CDMCursor(Scheme.STRUCTURE, var, this.dsp)
                     .setStructureData(data);
         }
         return instance;

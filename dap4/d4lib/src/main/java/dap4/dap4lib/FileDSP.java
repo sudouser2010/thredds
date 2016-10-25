@@ -40,7 +40,6 @@ public class FileDSP extends D4DSP
     public FileDSP()
     {
         super();
-        setOrder(ByteOrder.nativeOrder());
     }
 
     //////////////////////////////////////////////////
@@ -95,7 +94,7 @@ public class FileDSP extends D4DSP
                 ChunkInputStream rdr = new ChunkInputStream(stream, RequestMode.DAP);
                 String document = rdr.readDMR();
                 byte[] serialdata = DapUtil.readbinaryfile(rdr);
-                super.build(document, serialdata, rdr.getByteOrder());
+                super.build(document, serialdata, rdr.getRemoteByteOrder());
             }
             return this;
         } catch (IOException ioe) {

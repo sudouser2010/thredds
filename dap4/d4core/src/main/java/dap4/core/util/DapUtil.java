@@ -51,6 +51,7 @@ abstract public class DapUtil // Should only contain static methods
     static final public int CHECKSUMSIZE = 4; // bytes if CRC32
     static final public String DIGESTER = "CRC32";
     static final public String CHECKSUMATTRNAME = "_DAP4_Checksum_CRC32";
+    static final public String LITTLEENDIANATTRNAME = "_DAP4_Little_Endian";
 
     static final public String DRIVELETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
@@ -709,7 +710,7 @@ abstract public class DapUtil // Should only contain static methods
         List<Slice> slices = new ArrayList<>(indices.rank);
         for(int i = 0; i < indices.rank; i++) {
             long isize = indices.indices[i];
-            slices.add(new Slice(isize, isize, 1, indices.dimsizes[i]));
+            slices.add(new Slice(isize, isize+1, 1, indices.dimsizes[i]));
         }
         return slices;
     }

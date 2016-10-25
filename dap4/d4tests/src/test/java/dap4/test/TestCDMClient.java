@@ -171,7 +171,7 @@ public class TestCDMClient extends DapTestCommon
     chooseTestcases()
     {
         if(false) {
-            chosentests = locate("file:", "test_struct_nested.hdf5.raw");
+            chosentests = locate("file:", "test_sequence_1.syn.raw");
             prop_visual = true;
             prop_baseline = false;
         } else {

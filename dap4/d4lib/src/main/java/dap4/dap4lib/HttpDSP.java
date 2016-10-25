@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteOrder;
 
 /**
  * Make a request to a server and convert the reply
@@ -128,7 +129,7 @@ public class HttpDSP extends D4DSP
                         return true;
                 }
                 for(String[] pair : DAP4FRAGMARKERS) {
-                    String tag = xuri.getQueryFields().get(pair[0]);
+                    String tag = xuri.getFragFields().get(pair[0]);
                     if(tag != null
                             && (pair[1] == null
                             || pair[1].equalsIgnoreCase(tag)))

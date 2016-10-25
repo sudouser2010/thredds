@@ -302,12 +302,17 @@ abstract public class DapNode
     /**
      * Set the parent DapNode; may sometimes be same as container,
      * but not always (think attributes or maps).
+     * Invariant: parent must be either a group or a variable.
      * We can infer the container, so set that also.
      *
      * @param parent the proposed parent node
      */
     public void setParent(DapNode parent)
     {
+        assert (
+                (this.getSort() == DapSort.ENUMCONST && parent.getSort() == DapSort.ENUMERATION)
+                || parent.getSort().isa(DapSort.GROUP)
+                || parent.getSort() == DapSort.VARIABLE);
         this.parent = parent;
     }
 
@@ -336,7 +341,7 @@ abstract public class DapNode
     public String getFQN()
     {
         if(this.fqn == null)
-                this.fqn = computefqn(null);
+            this.fqn = computefqn(null);
         assert (fqn.length() > 0 || this.getSort() == DapSort.DATASET);
         return this.fqn;
     }

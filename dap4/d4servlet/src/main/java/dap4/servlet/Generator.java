@@ -142,7 +142,7 @@ public class Generator extends DapSerializer
         if(ce == null)
             ce = CEConstraint.getUniversal(this.dmr);
         this.ce = ce;
-        this.order = cw.getOrder();
+        this.order = cw.getWriteOrder();
         this.withdmr = withdmr;
         writer = new SerialWriter(this.cw, this.order);
     }
@@ -160,7 +160,7 @@ public class Generator extends DapSerializer
         try {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
-            DMRPrinter dp = new DMRPrinter(dmr, this.ce, pw);
+            DMRPrinter dp = new DMRPrinter(dmr, this.ce, pw, null);
             dp.print();
             pw.close();
             sw.close();

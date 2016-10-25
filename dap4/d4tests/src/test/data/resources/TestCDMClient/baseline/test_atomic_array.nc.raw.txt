@@ -10,31 +10,32 @@ netcdf test_atomic_array.nc.raw {
     d5 = 5;
   variables:
     ubyte vu8(d2, d3);
-      vu8:_DAP4_Checksum_CRC32 = "0x806122d3";
+      vu8:_DAP4_Checksum_CRC32 = "0xd0216283";
 
     short v16(d4);
-      v16:_DAP4_Checksum_CRC32 = "0x10119293";
+      v16:_DAP4_Checksum_CRC32 = "0xb0b1f2f3";
 
     uint vu32(d2, d3);
-      vu32:_DAP4_Checksum_CRC32 = "0xf0f15203";
+      vu32:_DAP4_Checksum_CRC32 = "0xf0b10233";
 
     double vd(d2);
-      vd:_DAP4_Checksum_CRC32 = "0xa0c10273";
+      vd:_DAP4_Checksum_CRC32 = "0x4021f263";
 
     char vc(d2);
-      vc:_DAP4_Checksum_CRC32 = "0x00d1a263";
+      vc:_DAP4_Checksum_CRC32 = "0x60a1d203";
 
     String vs(d2, d2);
-      vs:_DAP4_Checksum_CRC32 = "0xc0712263";
+      vs:_DAP4_Checksum_CRC32 = "0x30419223";
 
     opaque vo(d1, d2);
-      vo:_DAP4_Checksum_CRC32 = "0x00515223";
+      vo:_DAP4_Checksum_CRC32 = "0x2081c2b3";
 
     enum cloud_class_t primary_cloud(d5);
       primary_cloud:_FillValue = "Missing";
-      primary_cloud:_DAP4_Checksum_CRC32 = "0x706182b3";
+      primary_cloud:_DAP4_Checksum_CRC32 = "0xb0816273";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
 }
 netcdf test_atomic_array.nc.raw {
@@ -49,31 +50,32 @@ netcdf test_atomic_array.nc.raw {
     d5 = 5;
   variables:
     ubyte vu8(d2, d3);
-      vu8:_DAP4_Checksum_CRC32 = "0x806122d3";
+      vu8:_DAP4_Checksum_CRC32 = "0xd0216283";
 
     short v16(d4);
-      v16:_DAP4_Checksum_CRC32 = "0x10119293";
+      v16:_DAP4_Checksum_CRC32 = "0xb0b1f2f3";
 
     uint vu32(d2, d3);
-      vu32:_DAP4_Checksum_CRC32 = "0xf0f15203";
+      vu32:_DAP4_Checksum_CRC32 = "0xf0b10233";
 
     double vd(d2);
-      vd:_DAP4_Checksum_CRC32 = "0xa0c10273";
+      vd:_DAP4_Checksum_CRC32 = "0x4021f263";
 
     char vc(d2);
-      vc:_DAP4_Checksum_CRC32 = "0x00d1a263";
+      vc:_DAP4_Checksum_CRC32 = "0x60a1d203";
 
     String vs(d2, d2);
-      vs:_DAP4_Checksum_CRC32 = "0xc0712263";
+      vs:_DAP4_Checksum_CRC32 = "0x30419223";
 
     opaque vo(d1, d2);
-      vo:_DAP4_Checksum_CRC32 = "0x00515223";
+      vo:_DAP4_Checksum_CRC32 = "0x2081c2b3";
 
     enum cloud_class_t primary_cloud(d5);
       primary_cloud:_FillValue = "Missing";
-      primary_cloud:_DAP4_Checksum_CRC32 = "0x706182b3";
+      primary_cloud:_DAP4_Checksum_CRC32 = "0xb0816273";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
  data:
 vu8 =

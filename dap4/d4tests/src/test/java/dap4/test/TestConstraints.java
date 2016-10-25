@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.unidata.util.test.TestDir;
+import ucar.unidata.util.test.category.NeedsD4TS;
 import ucar.unidata.util.test.category.NeedsExternalResource;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.util.List;
 /**
  * Test at the NetcdfDataset level
  */
+@Category(NeedsD4TS.class)
 public class TestConstraints extends DapTestCommon
 {
     static final boolean DEBUG = false;

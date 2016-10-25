@@ -5,12 +5,16 @@
 package dap4.dap4lib;
 
 import dap4.core.data.DSP;
-import dap4.core.util.DapException;
 import dap4.core.data.DataCursor;
-import dap4.core.dmr.*;
+import dap4.core.dmr.DapAttribute;
+import dap4.core.dmr.DapDataset;
+import dap4.core.dmr.DapNode;
+import dap4.core.dmr.DapVariable;
 import dap4.core.dmr.parser.Dap4Parser;
 import dap4.core.dmr.parser.Dap4ParserImpl;
 import dap4.core.util.DapContext;
+import dap4.core.util.DapException;
+import dap4.core.util.DapUtil;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -48,7 +52,7 @@ abstract public class AbstractDSP implements DSP
     protected String location = null;
     protected ByteOrder order = null;
     protected ChecksumMode checksummode = ChecksumMode.DAP;
-    protected Map<DapVariable,DataCursor> variables = new HashMap<>();
+    protected Map<DapVariable, DataCursor> variables = new HashMap<>();
 
     //////////////////////////////////////////////////
     // Constructor(s)
@@ -72,7 +76,6 @@ abstract public class AbstractDSP implements DSP
     abstract public DSP open(String location) throws dap4.core.util.DapException;
 
     /**
-     *
      * @throws IOException
      */
     abstract public void close() throws IOException;
@@ -171,7 +174,7 @@ abstract public class AbstractDSP implements DSP
     public void
     addVariableData(DapVariable var, DataCursor cursor)
     {
-        this.variables.put(var,cursor);
+        this.variables.put(var, cursor);
     }
 
     //////////////////////////////////////////////////
@@ -243,6 +246,8 @@ abstract public class AbstractDSP implements DSP
                 break; /*ignore*/
             }
         }
+        // Try to extract the byte order
+        getEndianAttribute(dataset);
     }
 
     /**
@@ -253,6 +258,7 @@ abstract public class AbstractDSP implements DSP
      * @param attrname A non-escaped attribute name to be tested for suppression
      * @return true if the attribute should be suppressed, false otherwise.
      */
+
     protected boolean suppress(String attrname)
     {
         if(attrname.startsWith("_Coord")) return true;
@@ -260,4 +266,31 @@ abstract public class AbstractDSP implements DSP
             return true;
         return false;
     }
+
+    void
+    getEndianAttribute(DapDataset dataset)
+    {
+        DapAttribute a = dataset.findAttribute(DapUtil.LITTLEENDIANATTRNAME);
+        if(a == null)
+            setOrder(ByteOrder.LITTLE_ENDIAN);
+        else {
+            Object[] v = a.getValues();
+            if(v.length == 0)
+                setOrder(ByteOrder.nativeOrder());
+            else {
+                String onezero = v[0].toString();
+                int islittle = 1;
+                try {
+                    islittle = Integer.parseInt(onezero);
+                } catch (NumberFormatException e) {
+                    islittle = 1;
+                }
+                if(islittle == 0)
+                    setOrder(ByteOrder.BIG_ENDIAN);
+                else
+                    setOrder(ByteOrder.LITTLE_ENDIAN);
+            }
+        }
+    }
+
 }

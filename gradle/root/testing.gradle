@@ -25,6 +25,10 @@ ext {
         logger.warn "Skipping all NotTravis tests: detected that we're running in the Travis environment."
     }
     
+    isD4TS = System.properties['d4ts'] as boolean
+    if (!isD4TS) {
+        logger.warn "Skipping all NeedsD4TS tests: apparenty no d4ts server is available."
+    }
     
     contentRootKey = 'tds.content.root.path'
     isContentRootAvailable = isSystemPropertyAValidDirectory contentRootKey

@@ -10,6 +10,7 @@ import dap4.core.util.DapContext;
 import dap4.core.util.DapException;
 
 import java.io.IOException;
+import java.nio.ByteOrder;
 
 public interface DSP
 {
@@ -35,6 +36,8 @@ public interface DSP
      */
     public DSP open(String path) throws dap4.core.util.DapException;
 
+    public void close() throws IOException;
+
     public String getLocation();
 
     public void setLocation(String location);
@@ -47,6 +50,6 @@ public interface DSP
 
     public DataCursor getVariableData(DapVariable var) throws DapException; // get top level cursor
 
-    public void close() throws IOException;
+    public ByteOrder getOrder();
 
 }

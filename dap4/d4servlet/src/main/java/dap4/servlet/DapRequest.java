@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,6 +43,10 @@ public class DapRequest
 
     static public final String CONSTRAINTTAG = "dap4.ce";
 
+    static public final String DAP4ENDIANTAG = "dap4.bigendian";
+
+    static public final boolean DEFAULTBIGENDIAN = (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN);
+
     //////////////////////////////////////////////////
     // Instance variables
 
@@ -59,6 +64,8 @@ public class DapRequest
     protected Map<String, String> queries = new HashMap<String, String>();
     protected DapController controller = null;
     protected ServletContext servletcontext = null;
+
+    protected ByteOrder endianness = ByteOrder.nativeOrder();
 
     //////////////////////////////////////////////////
     // Constructor(s)
@@ -112,18 +119,14 @@ public class DapRequest
             throws IOException
     {
         this.url = request.getRequestURL().toString(); // does not include query
-        this.querystring = request.getQueryString();    // raw (undecoded)
-        // When using Spring Mock, the query is part of the parameters
-        if(this.controller.TESTING && this.querystring == null) {
-            String param = request.getParameter(CONSTRAINTTAG); // raw?
-            if(param != null) {
-                StringBuilder buf = new StringBuilder();
-                buf.append(CONSTRAINTTAG);
-                buf.append('=');
-                buf.append(param);
-                this.querystring = buf.toString();
-            }
+        // The mock servlet code does not construct a query string,
+        // so if we are doing testing, construct from parametermap.
+        if(DapController.TESTING) {
+            this.querystring = makeQueryString(this.request);
+        } else {
+            this.querystring = request.getQueryString();    // raw (undecoded)
         }
+
         XURI xuri;
         try {
             xuri = new XURI(this.url).parseQuery(this.querystring);
@@ -168,7 +171,7 @@ public class DapRequest
         } else {
             // Decompose path by '.'
             String[] pieces = this.datasetpath.split("[.]");
-            // Search backward looking for the mode (dmr or databuffer)
+            // Search backward looking for the mode (dmr or dap)
             // meanwhile capturing the format extension
             int modepos = 0;
             for(int i = pieces.length - 1; i >= 1; i--) {//ignore first piece
@@ -202,6 +205,22 @@ public class DapRequest
         if(querystring != null && querystring.length() > 0)
             this.queries = xuri.getQueryFields();
 
+        // For testing purposes, get the desired endianness to use with replies
+        String endianness = queryLookup(DAP4ENDIANTAG);
+        if(endianness != null) {
+            boolean isbig = DEFAULTBIGENDIAN;
+            try {
+             int endian = Integer.parseInt(endianness);
+                isbig = (endian != 0);
+            } catch (NumberFormatException e) {
+                isbig = DEFAULTBIGENDIAN;
+            }
+            if(isbig)
+                this.endianness = ByteOrder.BIG_ENDIAN;
+            else
+                this.endianness = ByteOrder.LITTLE_ENDIAN;
+        }
+
         if(DEBUG) {
             DapLog.debug("DapRequest: controllerpath =" + this.controllerpath);
             DapLog.debug("DapRequest: extension=" + (this.mode == null ? "null" : this.mode.extension()));
@@ -211,6 +230,11 @@ public class DapRequest
 
     //////////////////////////////////////////////////
     // Accessor(s)
+
+    public ByteOrder getByteOrder()
+    {
+        return this.endianness;
+    }
 
     public ServletContext getContext()
     {
@@ -305,6 +329,28 @@ public class DapRequest
     public String getDatasetPath()
     {
         return this.datasetpath;
+    }
+
+    static String
+    makeQueryString(HttpServletRequest req)
+    {
+        Map<String, String[]> map = req.getParameterMap();
+        if(map == null || map.size() == 0) return null;
+        StringBuilder q = new StringBuilder();
+        for(Map.Entry<String, String[]> entry : map.entrySet()) {
+            String[] values = entry.getValue();
+            if(values == null || values.length == 0) {
+                q.append("&");
+                q.append(entry.getKey());
+            } else for(int i = 0; i < values.length; i++) {
+                q.append("&");
+                q.append(entry.getKey());
+                q.append("=");
+                q.append(values[i]);
+            }
+        }
+        if(q.length() > 0) q.deleteCharAt(0);// leading &
+        return q.toString();
     }
 }
 

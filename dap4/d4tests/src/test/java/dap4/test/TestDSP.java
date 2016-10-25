@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import ucar.unidata.util.test.TestDir;
 import ucar.unidata.util.test.category.NeedsExternalResource;
+import ucar.unidata.util.test.category.NeedsD4TS;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -30,7 +31,7 @@ import java.util.List;
  * Test some of the DSP classes: FileDSP, SynDSP, and HttpDSP.
  * CDMDSP is tested separately in TestServlet.
  */
-
+@Category(NeedsD4TS.class)
 public class TestDSP extends DapTestCommon
 {
     static final boolean DEBUG = false;

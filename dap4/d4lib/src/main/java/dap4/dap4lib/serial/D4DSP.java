@@ -4,9 +4,10 @@
 
 package dap4.dap4lib.serial;
 
+import dap4.core.dmr.DapAttribute;
 import dap4.core.dmr.DapDataset;
-import dap4.core.dmr.DapVariable;
 import dap4.core.util.DapException;
+import dap4.core.util.DapUtil;
 import dap4.dap4lib.AbstractDSP;
 import dap4.dap4lib.DMRPrinter;
 
@@ -15,8 +16,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * DAP4 Serial to DSP interface
@@ -59,7 +58,7 @@ abstract public class D4DSP extends AbstractDSP
     /*packge*/ ByteBuffer
     getBuffer()
     {
-          return databuffer;
+        return databuffer;
     }
 
     //////////////////////////////////////////////////
@@ -70,11 +69,18 @@ abstract public class D4DSP extends AbstractDSP
             throws DapException
     {
         DapDataset dmr = parseDMR(document);
-        if(DEBUG)  {
+
+        if(DEBUG) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
-            DMRPrinter printer = new DMRPrinter(dmr,pw);
-            try {printer.print(); pw.close(); sw.close();} catch (IOException e) {};
+            DMRPrinter printer = new DMRPrinter(dmr, pw);
+            try {
+                printer.print();
+                pw.close();
+                sw.close();
+            } catch (IOException e) {
+            }
+            ;
             System.err.println("+++++++++++++++++++++");
             System.err.println(sw.toString());
             System.err.println("+++++++++++++++++++++");

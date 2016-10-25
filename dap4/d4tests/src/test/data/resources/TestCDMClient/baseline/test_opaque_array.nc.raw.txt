@@ -3,9 +3,10 @@ netcdf test_opaque_array.nc.raw {
     d2 = 2;
   variables:
     opaque vo2(d2, d2);
-      vo2:_DAP4_Checksum_CRC32 = "0xd0115293";
+      vo2:_DAP4_Checksum_CRC32 = "0xe0d192c3";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
 }
 netcdf test_opaque_array.nc.raw {
@@ -13,9 +14,10 @@ netcdf test_opaque_array.nc.raw {
     d2 = 2;
   variables:
     opaque vo2(d2, d2);
-      vo2:_DAP4_Checksum_CRC32 = "0xd0115293";
+      vo2:_DAP4_Checksum_CRC32 = "0xe0d192c3";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
  data:
 vo2 =  0x0123456789abcdef,

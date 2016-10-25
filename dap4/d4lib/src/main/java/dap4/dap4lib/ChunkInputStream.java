@@ -85,9 +85,15 @@ public class ChunkInputStream extends InputStream
     //////////////////////////////////////////////////
     // Accessors
 
-    public ByteOrder getByteOrder()
+    public ByteOrder getHostByteOrder()
     {
         return localorder;
+    }
+
+
+    public ByteOrder getRemoteByteOrder()
+    {
+        return remoteorder;
     }
 
     //////////////////////////////////////////////////

@@ -135,7 +135,7 @@ import java.util.List;
     CDMArraySequence(Group group, DataCursor data)
             throws DapException
     {
-        super(CDMArrayStructure.computemembers((DapStructure) data.getTemplate()),
+        super(CDMArrayStructure.computemembers((DapVariable) data.getTemplate()),
                 new SDI(), 0);
         this.template = (DapVariable) data.getTemplate();
         this.basetype =  this.template.getBaseType();

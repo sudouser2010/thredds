@@ -228,7 +228,7 @@ public class Nc4DMRCompiler
             buildenumtype(ti, name, basetype);
             break;
         case NC_COMPOUND:
-            buildcompoundtype(ti, name, nfieldsp.intValue());
+            buildcompoundtype(ti, name, nfieldsp.intValue(), null);
             break;
         case NC_VLEN:
             buildvlentype(ti, name, basetype);
@@ -280,7 +280,7 @@ public class Nc4DMRCompiler
     }
 
     protected void
-    buildcompoundtype(TypeNotes ti, String name, long nfields)
+    buildcompoundtype(TypeNotes ti, String name, long nfields, DapVariable parent)
             throws DapException
     {
         DapStructure ds = factory.newStructure(name);
@@ -288,7 +288,7 @@ public class Nc4DMRCompiler
         ti.set(ds);
         ti.group().addDecl(ds);
         for(int i = 0; i < nfields; i++) {
-            buildfield(ti, i);
+            buildfield(ti, i, parent);
         }
         // Finally, extract the size of the structure
         int ret;
@@ -300,7 +300,7 @@ public class Nc4DMRCompiler
     }
 
     protected void
-    buildfield(TypeNotes ti, int fid)
+    buildfield(TypeNotes ti, int fid, DapVariable parent)
             throws DapException
     {
         int ret;
@@ -317,16 +317,16 @@ public class Nc4DMRCompiler
         if(baset == null)
             throw new DapException("Undefined field base type: " + fieldtype);
         int[] dimsizes = getFieldDimsizes(ti.gid, ti.id, fid, ndimsp.getValue());
-        makeField(ti,fid, makeString(namep), baset, offsetp.intValue(), dimsizes);
+        makeField(ti, fid, makeString(namep), baset, offsetp.intValue(), dimsizes, parent);
     }
 
     protected void
-    makeField(TypeNotes parent, int index, String name, TypeNotes baset, int offset, int[] dimsizes)
+    makeField(TypeNotes container, int index, String name, TypeNotes baset, int offset, int[] dimsizes, DapVariable parent)
             throws DapException
     {
         DapVariable field;
-        DapStructure ds = (DapStructure)parent.getType();
-        FieldNotes notes = new FieldNotes(parent, index, offset)
+        DapStructure ds = (DapStructure)container.getType();
+        FieldNotes notes = new FieldNotes(container, index, offset)
                 .setBaseType(baset);
         switch (baset.getType().getTypeSort()) {
         case Structure:
@@ -350,6 +350,8 @@ public class Nc4DMRCompiler
             }
         }
         ds.addField(field);
+        if(parent != null)
+            field.setParent(parent);
         assert field.getParent() != null;
     }
 
@@ -434,7 +436,7 @@ public class Nc4DMRCompiler
         TypeNotes baset = TypeNotes.find(basetype);
         if(baset == null)
             throw new DapException("Undefined vlen basetype: " + basetype);
-        makeField(ti, 0, vname, baset, 0, new int[0]);
+        makeField(ti, 0, vname, baset, 0, new int[0],null);
         // Annotate to indicate that this came from a vlen
         DapAttribute tag = factory.newAttribute(UCARTAGVLEN, DapType.INT8);
         tag.setValues(new Object[]{(Byte) (byte) 1});

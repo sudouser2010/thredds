@@ -24,11 +24,13 @@ import ucar.unidata.util.test.TestDir;
 import ucar.unidata.util.test.UnitTestCommon;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @ContextConfiguration
 @WebAppConfiguration("file:src/test/data")
@@ -42,6 +44,7 @@ abstract public class DapTestCommon extends UnitTestCommon
     static public final String FILESERVER = "file://localhost:8080";
 
     static public final String CONSTRAINTTAG = "dap4.ce";
+    static public final String ORDERTAG = "dap4.bigendian";
 
     static final String D4TESTDIRNAME = "d4tests";
 
@@ -188,7 +191,7 @@ abstract public class DapTestCommon extends UnitTestCommon
         }
 
         static void
-        filterfiles(String path,List<String> matches, String... extensions)
+        filterfiles(String path, List<String> matches, String... extensions)
         {
             File testdirf = new File(path);
             assert (testdirf.canRead());
@@ -374,19 +377,26 @@ abstract public class DapTestCommon extends UnitTestCommon
     }
 
     static protected MvcResult
-    perform(String url, String respath, String query,
-            MockMvc mockMvc)
+    perform(String url, String respath,
+            MockMvc mockMvc,
+            String... params)
             throws Exception
     {
         MockHttpServletRequestBuilder rb = MockMvcRequestBuilders
                 .get(url)
                 .servletPath(url);
-        if(query != null)
-            rb.param(CONSTRAINTTAG, query);
+        if(params.length > 0) {
+            if(params.length % 2 == 1)
+                throw new Exception("Illegal query params");
+            for(int i = 0; i < params.length; i += 2) {
+                rb.param(params[0], params[1]);
+            }
+        }
         String realdir = canonjoin(dap4testroot, respath);
         rb.requestAttr("RESOURCEDIR", realdir);
         MvcResult result = mockMvc.perform(rb).andReturn();
         return result;
     }
+
 }
 

@@ -101,7 +101,7 @@ CDMArrayStructure extends ArrayStructure implements CDMArray
      */
     CDMArrayStructure(Group cdmroot, DataCursor data)
     {
-        super(computemembers((DapStructure) data.getTemplate()),
+        super(computemembers((DapVariable) data.getTemplate()),
                 CDMUtil.computeEffectiveShape(((DapVariable) data.getTemplate()).getDimensions()));
         this.template = (DapVariable) data.getTemplate();
         assert (this.template.getRank() == 0 && data.getScheme() == Scheme.STRUCTURE)
@@ -490,13 +490,14 @@ CDMArrayStructure extends ArrayStructure implements CDMArray
      * from a DapStructure. May need to recurse
      * if a field is itself a Structure
      *
-     * @param ds The DapStructure to use to construct
+     * @param var The DapVariable to use to construct
      *           a StructureMembers object.
      * @return The StructureMembers object for the given DapStructure
      */
     static StructureMembers
-    computemembers(DapStructure ds)
+    computemembers(DapVariable var)
     {
+        DapStructure ds = (DapStructure)var.getBaseType();
         StructureMembers sm
                 = new StructureMembers(ds.getShortName());
         List<DapVariable> fields = ds.getFields();
@@ -512,7 +513,7 @@ CDMArrayStructure extends ArrayStructure implements CDMArray
             m.setDataParam(i); // So we can index into various lists
             // recurse if this field is itself a structure
             if(dt.getTypeSort().isStructType()) {
-                StructureMembers subsm = computemembers((DapStructure)dt);
+                StructureMembers subsm = computemembers(field);
                 m.setStructureMembers(subsm);
             }
         }

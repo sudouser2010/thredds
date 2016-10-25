@@ -12,10 +12,11 @@ netcdf test_struct_nested3.hdf5.raw {
       } field3;
 
     } x;
-      x:_DAP4_Checksum_CRC32 = "0xe0e1e2c3";
+      x:_DAP4_Checksum_CRC32 = "0x40f1f2e3";
 
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
 }
 netcdf test_struct_nested3.hdf5.raw {
@@ -32,10 +33,11 @@ netcdf test_struct_nested3.hdf5.raw {
       } field3;
 
     } x;
-      x:_DAP4_Checksum_CRC32 = "0xe0e1e2c3";
+      x:_DAP4_Checksum_CRC32 = "0x40f1f2e3";
 
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
  data:
 x =    field3 =        field2 =            field1 =17

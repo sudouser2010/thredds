@@ -7,9 +7,10 @@ netcdf test_enum_array.nc.raw {
   variables:
     enum cloud_class_t primary_cloud(d5);
       primary_cloud:_FillValue = "Missing";
-      primary_cloud:_DAP4_Checksum_CRC32 = "0x706182b3";
+      primary_cloud:_DAP4_Checksum_CRC32 = "0xb0816273";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
 }
 netcdf test_enum_array.nc.raw {
@@ -21,9 +22,10 @@ netcdf test_enum_array.nc.raw {
   variables:
     enum cloud_class_t primary_cloud(d5);
       primary_cloud:_FillValue = "Missing";
-      primary_cloud:_DAP4_Checksum_CRC32 = "0x706182b3";
+      primary_cloud:_DAP4_Checksum_CRC32 = "0xb0816273";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
  data:
 primary_cloud =

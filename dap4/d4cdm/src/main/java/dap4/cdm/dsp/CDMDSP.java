@@ -12,7 +12,6 @@ import dap4.core.data.DataCursor;
 import dap4.core.dmr.*;
 import dap4.core.util.DapContext;
 import dap4.core.util.DapException;
-import dap4.core.util.DapSort;
 import dap4.core.util.DapUtil;
 import dap4.dap4lib.AbstractDSP;
 import ucar.ma2.Array;
@@ -483,9 +482,9 @@ public class CDMDSP extends AbstractDSP
                 ((DapGroup) parent).addDecl(dapvar);
                 break;
             case VARIABLE:
-                DapStructure ds = (DapStructure)((DapVariable)parent).getBaseType();
+                DapStructure ds = (DapStructure) ((DapVariable) parent).getBaseType();
                 ds.addField(dapvar);
-                dapvar.setParent((DapVariable) parent);
+                dapvar.setParent(parent);
                 break;
             default:
                 assert (false) : "Internal error";
@@ -803,18 +802,25 @@ public class CDMDSP extends AbstractDSP
                     if(v != null) {
                         DapVariable mapvar = (DapVariable) lookupNode((CDMNode) v);
                         if(mapvar == null)
-                            throw new dap4.core.util.DapException("Illegal map variable:" + v.toString());
+                            throw new DapException("Illegal map variable:" + v.toString());
                         if(!mapvar.isAtomic())
-                            throw new dap4.core.util.DapException("Non-atomic map variable:" + v.toString());
+                            throw new DapException("Non-atomic map variable:" + v.toString());
                         // Ignore maps where the map variable is inside this scope
-                        if(!mapvar.isTopLevel()) {
-                            DapVariable parent = (DapVariable) mapvar.getContainer();
-                            assert parent.isStructure();
-                            if(dapvar != parent) {// Do we need to do transitive closure?
-                                DapMap map = (DapMap) dmrfactory.newMap(mapvar).annotate(v);
-                                dapvar.addMap(map);
+                        /*
+                            if(!mapvar.isTopLevel()) {
+                            DapNode parent = mapvar.getContainer();
+                            switch (parent.getSort()) {
+                            case SEQUENCE:
+                            case STRUCTURE:
+                                if(dapvar.getBaseType() == parent) // Do we need to do transitive closure?
+                                    throw new DapException("Map var cannot be in same structure as map");
+                                break;
+                            default:
+                                assert false : "Unexpected container type";
                             }
-                        }
+                            */
+                        DapMap map = (DapMap) dmrfactory.newMap(mapvar).annotate(v);
+                        dapvar.addMap(map);
                     }
                 }
             }

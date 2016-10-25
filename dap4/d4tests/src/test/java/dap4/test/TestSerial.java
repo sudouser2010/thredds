@@ -8,6 +8,7 @@ import org.junit.experimental.categories.Category;
 import ucar.nc2.dataset.NetcdfDataset;
 import ucar.unidata.util.test.TestDir;
 import ucar.unidata.util.test.category.NeedsExternalResource;
+import ucar.unidata.util.test.category.NeedsD4TS;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -17,6 +18,7 @@ import java.util.List;
 /**
  * Test at the NetcdfDataset level; access .ser files on server.
  */
+@Category(NeedsD4TS.class)
 public class TestSerial extends DapTestCommon
 {
     static protected final boolean DEBUG = false;
@@ -26,6 +28,8 @@ public class TestSerial extends DapTestCommon
     static protected final String EXTENSION = (NCDUMP ? "ncdump" : "dmp");
 
     static protected final String SERIALEXTENSION = "ser";
+
+    static protected final String DAP4TAG = "#dap4";
 
     static protected final String[] EMPTY = new String[]{""};
 
@@ -69,9 +73,21 @@ public class TestSerial extends DapTestCommon
 
         String makeurl(String ce)
         {
-            String url = server + "/" + dataset + "." + SERIALEXTENSION;
-            if(ce != null && ce.length() > 0) url += "?"+ DapTestCommon.CONSTRAINTTAG+"=" + ce;
-            return url;
+            StringBuilder url = new StringBuilder();
+            url.append("http://");
+            url.append(this.server);
+            url.append("/d4ts/");
+            url.append(this.dataset);
+            url.append(".");
+            url.append(SERIALEXTENSION);
+            url.append(DAP4TAG);
+            if(ce != null && ce.length() > 0) {
+                url.append("?");
+                url.append(DapTestCommon.CONSTRAINTTAG);
+                url.append("=");
+                url.append(ce);
+            }
+            return url.toString();
         }
 
         public String toString()

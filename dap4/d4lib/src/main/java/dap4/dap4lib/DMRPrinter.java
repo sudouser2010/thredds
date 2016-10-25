@@ -6,10 +6,7 @@ package dap4.dap4lib;
 
 import dap4.core.ce.CEConstraint;
 import dap4.core.dmr.*;
-import dap4.core.util.DapException;
-import dap4.core.util.DapSort;
-import dap4.core.util.Escape;
-import dap4.core.util.IndentWriter;
+import dap4.core.util.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -45,6 +42,7 @@ public class DMRPrinter
     protected IndentWriter printer = null;
     protected DapDataset dmr = null;
     protected CEConstraint ce = null;
+    protected ResponseFormat format = null;
 
     //////////////////////////////////////////////////
     // Constructor(s)
@@ -55,16 +53,17 @@ public class DMRPrinter
 
     public DMRPrinter(DapDataset dmr, PrintWriter writer)
     {
-        this(dmr, null, writer);
+        this(dmr, null, writer,null);
     }
 
-    public DMRPrinter(DapDataset dmr, CEConstraint ce, PrintWriter writer)
+    public DMRPrinter(DapDataset dmr, CEConstraint ce, PrintWriter writer, ResponseFormat format)
     {
         this();
         this.dmr = dmr;
         this.ce = ce;
         this.writer = writer;
         this.printer = new IndentWriter(writer);
+        this.format = (format == null ? ResponseFormat.XML : format);
     }
 
     //////////////////////////////////////////////////

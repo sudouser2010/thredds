@@ -4,53 +4,54 @@ netcdf test_atomic_types.syn.raw {
 
   variables:
     byte v8;
-      v8:_DAP4_Checksum_CRC32 = "0x30310213";
+      v8:_DAP4_Checksum_CRC32 = "0x10013233";
 
     ubyte vu8;
-      vu8:_DAP4_Checksum_CRC32 = "0x9091b233";
+      vu8:_DAP4_Checksum_CRC32 = "0x30b19293";
 
     short v16;
-      v16:_DAP4_Checksum_CRC32 = "0x00d152e3";
+      v16:_DAP4_Checksum_CRC32 = "0x8041c213";
 
     ushort vu16;
-      vu16:_DAP4_Checksum_CRC32 = "0x7031e233";
+      vu16:_DAP4_Checksum_CRC32 = "0x40d132f3";
 
     int v32;
-      v32:_DAP4_Checksum_CRC32 = "0x3011d2b3";
+      v32:_DAP4_Checksum_CRC32 = "0x30615203";
 
     uint vu32;
-      vu32:_DAP4_Checksum_CRC32 = "0x8041e233";
+      vu32:_DAP4_Checksum_CRC32 = "0x80f14213";
 
     long v64;
-      v64:_DAP4_Checksum_CRC32 = "0x60f15293";
+      v64:_DAP4_Checksum_CRC32 = "0xb081e213";
 
     ulong vu64;
-      vu64:_DAP4_Checksum_CRC32 = "0x60013293";
+      vu64:_DAP4_Checksum_CRC32 = "0xd0313243";
 
     float vf;
-      vf:_DAP4_Checksum_CRC32 = "0x20115233";
+      vf:_DAP4_Checksum_CRC32 = "0x80916283";
 
     double vd;
-      vd:_DAP4_Checksum_CRC32 = "0xa011d2f3";
+      vd:_DAP4_Checksum_CRC32 = "0xa05112c3";
 
     char vc;
-      vc:_DAP4_Checksum_CRC32 = "0x5021b203";
+      vc:_DAP4_Checksum_CRC32 = "0x00b12253";
 
     String vs;
-      vs:_DAP4_Checksum_CRC32 = "0xd0718283";
+      vs:_DAP4_Checksum_CRC32 = "0x1021d2c3";
 
     opaque vo;
-      vo:_DAP4_Checksum_CRC32 = "0x80d12223";
+      vo:_DAP4_Checksum_CRC32 = "0x401132c3";
 
     enum cloud_class_t primary_cloud;
       primary_cloud:_FillValue = "Missing";
-      primary_cloud:_DAP4_Checksum_CRC32 = "0x20716243";
+      primary_cloud:_DAP4_Checksum_CRC32 = "0x40617223";
 
     enum cloud_class_t secondary_cloud;
       secondary_cloud:_FillValue = "Missing";
-      secondary_cloud:_DAP4_Checksum_CRC32 = "0x30b10243";
+      secondary_cloud:_DAP4_Checksum_CRC32 = "0x4001b233";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
 }
 netcdf test_atomic_types.syn.raw {
@@ -59,53 +60,54 @@ netcdf test_atomic_types.syn.raw {
 
   variables:
     byte v8;
-      v8:_DAP4_Checksum_CRC32 = "0x30310213";
+      v8:_DAP4_Checksum_CRC32 = "0x10013233";
 
     ubyte vu8;
-      vu8:_DAP4_Checksum_CRC32 = "0x9091b233";
+      vu8:_DAP4_Checksum_CRC32 = "0x30b19293";
 
     short v16;
-      v16:_DAP4_Checksum_CRC32 = "0x00d152e3";
+      v16:_DAP4_Checksum_CRC32 = "0x8041c213";
 
     ushort vu16;
-      vu16:_DAP4_Checksum_CRC32 = "0x7031e233";
+      vu16:_DAP4_Checksum_CRC32 = "0x40d132f3";
 
     int v32;
-      v32:_DAP4_Checksum_CRC32 = "0x3011d2b3";
+      v32:_DAP4_Checksum_CRC32 = "0x30615203";
 
     uint vu32;
-      vu32:_DAP4_Checksum_CRC32 = "0x8041e233";
+      vu32:_DAP4_Checksum_CRC32 = "0x80f14213";
 
     long v64;
-      v64:_DAP4_Checksum_CRC32 = "0x60f15293";
+      v64:_DAP4_Checksum_CRC32 = "0xb081e213";
 
     ulong vu64;
-      vu64:_DAP4_Checksum_CRC32 = "0x60013293";
+      vu64:_DAP4_Checksum_CRC32 = "0xd0313243";
 
     float vf;
-      vf:_DAP4_Checksum_CRC32 = "0x20115233";
+      vf:_DAP4_Checksum_CRC32 = "0x80916283";
 
     double vd;
-      vd:_DAP4_Checksum_CRC32 = "0xa011d2f3";
+      vd:_DAP4_Checksum_CRC32 = "0xa05112c3";
 
     char vc;
-      vc:_DAP4_Checksum_CRC32 = "0x5021b203";
+      vc:_DAP4_Checksum_CRC32 = "0x00b12253";
 
     String vs;
-      vs:_DAP4_Checksum_CRC32 = "0xd0718283";
+      vs:_DAP4_Checksum_CRC32 = "0x1021d2c3";
 
     opaque vo;
-      vo:_DAP4_Checksum_CRC32 = "0x80d12223";
+      vo:_DAP4_Checksum_CRC32 = "0x401132c3";
 
     enum cloud_class_t primary_cloud;
       primary_cloud:_FillValue = "Missing";
-      primary_cloud:_DAP4_Checksum_CRC32 = "0x20716243";
+      primary_cloud:_DAP4_Checksum_CRC32 = "0x40617223";
 
     enum cloud_class_t secondary_cloud;
       secondary_cloud:_FillValue = "Missing";
-      secondary_cloud:_DAP4_Checksum_CRC32 = "0x30b10243";
+      secondary_cloud:_DAP4_Checksum_CRC32 = "0x4001b233";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
  data:
 v8 =58

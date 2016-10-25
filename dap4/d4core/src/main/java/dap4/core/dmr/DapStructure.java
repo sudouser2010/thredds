@@ -69,15 +69,14 @@ public class DapStructure extends DapType
         return fields;
     }
 
-    public void setFields(DapVariable instance, List<? extends DapNode> fields)
+    /*public void setFields(DapVariable instance, List<? extends DapNode> fields)
             throws DapException
     {
         fields.clear();
         for(int i = 0; i < fields.size(); i++) {
-            addField((DapVariable)fields.get(i));
-            fields.get(i).setParent(instance);
+            addField((DapVariable)fields.get(i),instance);
         }
-    }
+    } */
 
     public boolean isLeaf()
     {

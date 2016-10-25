@@ -30,6 +30,12 @@ tasks.withType(Test).all {
             excludeCategories 'ucar.unidata.util.test.category.NeedsExternalResource'
         }
         
+        // Allow for the (temporary) suppression of D4TS tests;
+        // use this category so we can easily locate them.
+        if (isD4TS) {
+            excludeCategories 'ucar.unidata.util.test.category.NeedsD4TS'
+        }
+
         if (!isContentRootAvailable && !isJenkins) {     // Don't skip tests on Jenkins, except NotJenkins ones.
             excludeCategories 'ucar.unidata.util.test.category.NeedsContentRoot'
         }

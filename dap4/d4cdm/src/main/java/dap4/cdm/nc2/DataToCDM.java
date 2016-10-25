@@ -15,6 +15,7 @@ import ucar.nc2.Attribute;
 import ucar.nc2.Group;
 import ucar.nc2.Variable;
 
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,21 @@ public class DataToCDM
         this.dsp = dsp;
         this.dmr = dsp.getDMR();
         this.nodemap = nodemap;
+        this.cdmroot = ncfile.getRootGroup();
         arraymap = new HashMap<Variable, Array>();
+        // Add endianness attribute to the group
+       /* ByteOrder remoteorder = ncfile.getDSP().getOrder();
+        String endianness = null;
+        if(remoteorder != null) {
+            if(remoteorder == ByteOrder.BIG_ENDIAN)
+                endianness = "big";
+            else if(remoteorder == ByteOrder.BIG_ENDIAN)
+                endianness = "little";
+        }
+        if(endianness != null) {
+            Attribute aendian = new Attribute(DapUtil.ENDIANATTRNAME, endianness);
+            this.cdmroot.addAttribute(aendian);
+        } */
     }
 
     //////////////////////////////////////////////////
@@ -141,10 +156,10 @@ public class DataToCDM
     {
         CDMArrayStructure arraystruct = new CDMArrayStructure(this.cdmroot, data);
         DapVariable var = (DapVariable) data.getTemplate();
-        DapStructure struct = (DapStructure)var.getBaseType();
+        DapStructure struct = (DapStructure) var.getBaseType();
         int nmembers = struct.getFields().size();
         List<DapDimension> dimset = var.getDimensions();
-        if(var.getRank()  == 0) { // scalar
+        if(var.getRank() == 0) { // scalar
             for(int f = 0; f < nmembers; f++) {
                 DataCursor dc = data.getField(f);
                 Array afield = createVar(dc);

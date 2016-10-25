@@ -4,53 +4,54 @@ netcdf test_atomic_types.nc.raw {
 
   variables:
     byte v8;
-      v8:_DAP4_Checksum_CRC32 = "0xa061b233";
+      v8:_DAP4_Checksum_CRC32 = "0x30b162a3";
 
     ubyte vu8;
-      vu8:_DAP4_Checksum_CRC32 = "0x000102f3";
+      vu8:_DAP4_Checksum_CRC32 = "0xf0010203";
 
     short v16;
-      v16:_DAP4_Checksum_CRC32 = "0xd09162a3";
+      v16:_DAP4_Checksum_CRC32 = "0x705182b3";
 
     ushort vu16;
-      vu16:_DAP4_Checksum_CRC32 = "0x0001f2f3";
+      vu16:_DAP4_Checksum_CRC32 = "0xf0f10203";
 
     int v32;
-      v32:_DAP4_Checksum_CRC32 = "0xd0714213";
+      v32:_DAP4_Checksum_CRC32 = "0x10a142c3";
 
     uint vu32;
       vu32:_DAP4_Checksum_CRC32 = "0xf0f1f2f3";
 
     long v64;
-      v64:_DAP4_Checksum_CRC32 = "0x3051f2c3";
+      v64:_DAP4_Checksum_CRC32 = "0x707152c3";
 
     ulong vu64;
-      vu64:_DAP4_Checksum_CRC32 = "0x10d14223";
+      vu64:_DAP4_Checksum_CRC32 = "0x2041d213";
 
     float vf;
-      vf:_DAP4_Checksum_CRC32 = "0x60112283";
+      vf:_DAP4_Checksum_CRC32 = "0x508122f3";
 
     double vd;
-      vd:_DAP4_Checksum_CRC32 = "0x70c1b2f3";
+      vd:_DAP4_Checksum_CRC32 = "0x208192d3";
 
     char vc;
-      vc:_DAP4_Checksum_CRC32 = "0x10a1d2a3";
+      vc:_DAP4_Checksum_CRC32 = "0xa0d1a213";
 
     String vs;
-      vs:_DAP4_Checksum_CRC32 = "0xd0a19233";
+      vs:_DAP4_Checksum_CRC32 = "0xe0f192f3";
 
     opaque vo;
-      vo:_DAP4_Checksum_CRC32 = "0xd0d142d3";
+      vo:_DAP4_Checksum_CRC32 = "0x1081e283";
 
     enum cloud_class_t primary_cloud;
       primary_cloud:_FillValue = "Missing";
-      primary_cloud:_DAP4_Checksum_CRC32 = "0xa0810233";
+      primary_cloud:_DAP4_Checksum_CRC32 = "0x300182a3";
 
     enum cloud_class_t secondary_cloud;
       secondary_cloud:_FillValue = "Missing";
-      secondary_cloud:_DAP4_Checksum_CRC32 = "0x2081b213";
+      secondary_cloud:_DAP4_Checksum_CRC32 = "0x10b18223";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
 }
 netcdf test_atomic_types.nc.raw {
@@ -59,53 +60,54 @@ netcdf test_atomic_types.nc.raw {
 
   variables:
     byte v8;
-      v8:_DAP4_Checksum_CRC32 = "0xa061b233";
+      v8:_DAP4_Checksum_CRC32 = "0x30b162a3";
 
     ubyte vu8;
-      vu8:_DAP4_Checksum_CRC32 = "0x000102f3";
+      vu8:_DAP4_Checksum_CRC32 = "0xf0010203";
 
     short v16;
-      v16:_DAP4_Checksum_CRC32 = "0xd09162a3";
+      v16:_DAP4_Checksum_CRC32 = "0x705182b3";
 
     ushort vu16;
-      vu16:_DAP4_Checksum_CRC32 = "0x0001f2f3";
+      vu16:_DAP4_Checksum_CRC32 = "0xf0f10203";
 
     int v32;
-      v32:_DAP4_Checksum_CRC32 = "0xd0714213";
+      v32:_DAP4_Checksum_CRC32 = "0x10a142c3";
 
     uint vu32;
       vu32:_DAP4_Checksum_CRC32 = "0xf0f1f2f3";
 
     long v64;
-      v64:_DAP4_Checksum_CRC32 = "0x3051f2c3";
+      v64:_DAP4_Checksum_CRC32 = "0x707152c3";
 
     ulong vu64;
-      vu64:_DAP4_Checksum_CRC32 = "0x10d14223";
+      vu64:_DAP4_Checksum_CRC32 = "0x2041d213";
 
     float vf;
-      vf:_DAP4_Checksum_CRC32 = "0x60112283";
+      vf:_DAP4_Checksum_CRC32 = "0x508122f3";
 
     double vd;
-      vd:_DAP4_Checksum_CRC32 = "0x70c1b2f3";
+      vd:_DAP4_Checksum_CRC32 = "0x208192d3";
 
     char vc;
-      vc:_DAP4_Checksum_CRC32 = "0x10a1d2a3";
+      vc:_DAP4_Checksum_CRC32 = "0xa0d1a213";
 
     String vs;
-      vs:_DAP4_Checksum_CRC32 = "0xd0a19233";
+      vs:_DAP4_Checksum_CRC32 = "0xe0f192f3";
 
     opaque vo;
-      vo:_DAP4_Checksum_CRC32 = "0xd0d142d3";
+      vo:_DAP4_Checksum_CRC32 = "0x1081e283";
 
     enum cloud_class_t primary_cloud;
       primary_cloud:_FillValue = "Missing";
-      primary_cloud:_DAP4_Checksum_CRC32 = "0xa0810233";
+      primary_cloud:_DAP4_Checksum_CRC32 = "0x300182a3";
 
     enum cloud_class_t secondary_cloud;
       secondary_cloud:_FillValue = "Missing";
-      secondary_cloud:_DAP4_Checksum_CRC32 = "0x2081b213";
+      secondary_cloud:_DAP4_Checksum_CRC32 = "0x10b18223";
 
   // global attributes:
+  :_DAP4_Little_Endian = 1B;
   :_CoordSysBuilder = "ucar.nc2.dataset.conv.DefaultConvention";
  data:
 v8 =-128
